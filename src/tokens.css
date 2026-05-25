@@ -1,0 +1,45 @@
+/* 博物馆典藏风设计 Token */
+:root {
+  /* 色彩 */
+  --color-paper: #F8F4EC;        /* 米白底 */
+  --color-ink: #1A1410;          /* 墨黑字 */
+  --color-vermilion: #C0392B;    /* 朱砂点缀 */
+  --color-vermilion-light: #E74C3C;
+  --color-gold: #B8860B;         /* 金色 */
+  --color-bronze: #8B6914;       /* 铜色 */
+  --color-jade: #2E7D5E;         /* 玉色 */
+  --color-mist: #9E9E8A;         /* 灰雾 */
+  --color-border: #D4CBBA;       /* 边框 */
+  --color-surface: #FFFFFF;      /* 卡片底 */
+  --color-surface-alt: #F2EDE3;  /* 次级底 */
+
+  /* 暗色主题 */
+  --color-paper-dark: #1A1614;
+  --color-ink-dark: #E8E0D0;
+  --color-surface-dark: #252220;
+  --color-surface-alt-dark: #2E2A27;
+  --color-border-dark: #3A3530;
+
+  /* 字体 */
+  --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'SimSun', serif;
+  --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  /* 间距 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* 阴影 */
+  --shadow-card: 0 2px 8px rgba(26,20,16,0.08), 0 1px 2px rgba(26,20,16,0.04);
+  --shadow-modal: 0 8px 32px rgba(26,20,16,0.16);
+}
+
+[data-theme="dark"] {
+  --color-paper: var(--color-paper-dark);
+  --color-ink: var(--color-ink-dark);
+  --color-surface: var(--color-surface-dark);
+  --color-surface-alt: var(--color-surface-alt-dark);
+  --color-border: var(--color-border-dark);
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-modal: 0 8px 32px rgba(0,0,0,0.5);
+}

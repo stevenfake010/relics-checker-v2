@@ -1,0 +1,71 @@
+@import "./tokens.css";
+@import "tailwindcss";
+
+@theme {
+  --color-paper: var(--color-paper);
+  --color-ink: var(--color-ink);
+  --color-vermilion: var(--color-vermilion);
+  --color-vermilion-light: var(--color-vermilion-light);
+  --color-gold: var(--color-gold);
+  --color-bronze: var(--color-bronze);
+  --color-jade: var(--color-jade);
+  --color-mist: var(--color-mist);
+  --color-border: var(--color-border);
+  --color-surface: var(--color-surface);
+  --color-surface-alt: var(--color-surface-alt);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+}
+
+/* 印章样式 */
+.seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-vermilion);
+  border-radius: 4px;
+  color: var(--color-vermilion);
+  font-size: 11px;
+  font-weight: bold;
+  font-family: var(--font-serif);
+  line-height: 1;
+}
+
+.seal.checked {
+  background-color: var(--color-vermilion);
+  color: white;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-alt);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
