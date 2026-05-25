@@ -1,4 +1,5 @@
 import { type UserId, USER_CONFIGS, useIdentity } from '../contexts/IdentityContext'
+import { Avatar } from '../components/Avatar'
 
 export function Onboarding() {
   const { setCurrentUser } = useIdentity()
@@ -33,16 +34,7 @@ export function Onboarding() {
                 boxShadow: 'var(--shadow-card)',
               }}
             >
-              <div
-                className="w-16 h-16 rounded flex items-center justify-center text-2xl font-bold border-2"
-                style={{
-                  borderColor: cfg.color,
-                  color: cfg.color,
-                  fontFamily: 'var(--font-serif)',
-                }}
-              >
-                {cfg.sealChar}
-              </div>
+              <Avatar user={cfg} size={84} active />
               <div>
                 <div className="text-2xl font-bold" style={{ color: 'var(--color-ink)', fontFamily: 'var(--font-serif)' }}>
                   {cfg.label}

@@ -5,14 +5,15 @@ export type UserId = 'zuo' | 'huang'
 export interface UserConfig {
   id: UserId
   label: string      // 完整称呼，例如「佑」「宝」
-  sealChar: string   // 印章上的单字
+  sealChar: string   // 印章上的单字（旧版兼容）
   fullName: string   // 全名，例如「左小佑」
   color: string      // 主色
+  avatar: string     // 头像图片 url（public/ 下的路径）
 }
 
 export const USER_CONFIGS: Record<UserId, UserConfig> = {
-  zuo:   { id: 'zuo',   label: '佑', sealChar: '佑', fullName: '左小佑', color: '#A23B2C' },
-  huang: { id: 'huang', label: '宝', sealChar: '宝', fullName: '黄小宝', color: '#3B6B5E' },
+  zuo:   { id: 'zuo',   label: '佑', sealChar: '佑', fullName: '左小佑', color: '#A23B2C', avatar: '/avatars/zuo.jpg' },
+  huang: { id: 'huang', label: '宝', sealChar: '宝', fullName: '黄小宝', color: '#3B6B5E', avatar: '/avatars/huang.jpg' },
 }
 
 export const USER_LIST: UserConfig[] = [USER_CONFIGS.zuo, USER_CONFIGS.huang]

@@ -54,14 +54,14 @@ export function Filters({ filter, onChange, totalShown, totalAll }: FiltersProps
       </div>
 
       {/* Checkin filters */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <ToggleFilter
-          label="甲已打卡"
+          label="佑"
           value={filter.checkedByA}
           onChange={(v) => set('checkedByA', v)}
         />
         <ToggleFilter
-          label="乙已打卡"
+          label="宝"
           value={filter.checkedByB}
           onChange={(v) => set('checkedByB', v)}
         />
@@ -104,7 +104,7 @@ function ToggleFilter({
     else onChange(null)
   }
 
-  const display = value === null ? `${label}（全部）` : value ? `✓ ${label}` : `✗ 未打卡`
+  const display = value === null ? `${label}：全部` : value ? `${label}：已打卡` : `${label}：未打卡`
   const color = value === null ? 'var(--color-mist)' : value ? 'var(--color-jade)' : 'var(--color-vermilion)'
 
   return (

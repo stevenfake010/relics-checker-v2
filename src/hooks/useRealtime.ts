@@ -2,27 +2,39 @@ import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { CHECKINS_KEY } from './useCheckins'
+import { HERITAGE_CHECKINS_KEY } from './useHeritageCheckins'
 
 export function useRealtime() {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    if (!supabase) return // No Supabase → no realtime
+    if (!supabase) return
 
-    const channel = supabase
+    const relicChannel = supabase
       .channel('checkins-realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'checkins' },
         () => {
-          // Invalidate and refetch on any change
           queryClient.invalidateQueries({ queryKey: CHECKINS_KEY })
         }
       )
       .subscribe()
 
+    const heritageChannel = supabase
+      .channel('heritage-checkins-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'heritage_checkins' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: HERITAGE_CHECKINS_KEY })
+        }
+      )
+      .subscribe()
+
     return () => {
-      supabase?.removeChannel(channel)
+      supabase?.removeChannel(relicChannel)
+      supabase?.removeChannel(heritageChannel)
     }
   }, [queryClient])
 }

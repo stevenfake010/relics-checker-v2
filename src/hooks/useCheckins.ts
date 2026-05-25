@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchCheckins, addCheckin, removeCheckin, type Checkin } from '../lib/queries'
 import { hasSupabase } from '../lib/supabase'
 import type { UserId } from '../contexts/IdentityContext'
+import { celebrateCheckin } from '../utils/celebrate'
 
 export const CHECKINS_KEY = ['checkins'] as const
 
@@ -64,8 +65,13 @@ export function useToggleCheckin() {
           (c) => !(c.user_id === userId && c.relic_id === relicId)
         )
       } else {
+        // 新打卡时触发庆祝
+        try {
+          celebrateCheckin(userId)
+        } catch {
+          /* ignore */
+        }
         const newCheckin: Checkin = {
-          id: Date.now(),
           user_id: userId,
           relic_id: relicId,
           checked_at: new Date().toISOString(),

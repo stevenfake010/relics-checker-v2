@@ -1,7 +1,6 @@
 import { supabase } from './supabase'
 
 export interface Checkin {
-  id: number
   user_id: string
   relic_id: number
   checked_at: string
@@ -12,7 +11,7 @@ export async function fetchCheckins(): Promise<Checkin[]> {
   if (!supabase) return []
   const { data, error } = await supabase
     .from('checkins')
-    .select('id, user_id, relic_id, checked_at')
+    .select('user_id, relic_id, checked_at')
     .order('checked_at', { ascending: false })
   if (error) {
     console.error('[queries] fetchCheckins error:', error)
@@ -26,8 +25,11 @@ export async function addCheckin(userId: string, relicId: number): Promise<Check
   if (!supabase) return null
   const { data, error } = await supabase
     .from('checkins')
-    .insert({ user_id: userId, relic_id: relicId } as never)
-    .select('id, user_id, relic_id, checked_at')
+    .upsert(
+      { user_id: userId, relic_id: relicId } as never,
+      { onConflict: 'user_id,relic_id' } as never
+    )
+    .select('user_id, relic_id, checked_at')
     .single()
   if (error) {
     console.error('[queries] addCheckin error:', error)

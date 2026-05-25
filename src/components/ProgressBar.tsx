@@ -1,5 +1,6 @@
 import { USER_CONFIGS } from '../contexts/IdentityContext'
 import type { DualCompareResult } from '../logic/aggregate'
+import { Avatar } from './Avatar'
 
 interface ProgressBarProps {
   /** 全部 195 件统计 */
@@ -70,17 +71,8 @@ function Section({
         return (
           <div key={uid} className="mb-2 last:mb-0">
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="w-5 h-5 rounded text-xs font-bold border flex items-center justify-center"
-                  style={{
-                    borderColor: cfg.color,
-                    color: cfg.color,
-                    fontFamily: 'var(--font-serif)',
-                  }}
-                >
-                  {cfg.sealChar}
-                </span>
+              <div className="flex items-center gap-2">
+                <Avatar user={cfg} size={22} active />
                 <span className="text-sm" style={{ color: 'var(--color-ink)' }}>
                   {cfg.label}
                 </span>
