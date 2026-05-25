@@ -74,17 +74,17 @@ export function HeritageCard({ site, checkinSet, onClick }: HeritageCardProps) {
       </div>
 
       {/* 内容区 */}
-      <div className="p-3 flex flex-col flex-1">
+      <div className="p-2 sm:p-3 flex flex-col flex-1">
         {/* 标题 + 头像同一行 */}
-        <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div className="flex items-start justify-between gap-1 sm:gap-2 mb-1">
           <h3
-            className="text-base font-medium leading-snug line-clamp-2 flex-1 min-w-0"
+            className="text-sm sm:text-base font-medium leading-snug line-clamp-2 flex-1 min-w-0"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-ink)' }}
           >
             {site.name}
           </h3>
           {/* 双人头像放在标题右侧，独立空间 */}
-          <div className="flex items-center gap-1 flex-shrink-0 -mt-0.5">
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 -mt-0.5">
             {(['zuo', 'huang'] as const).map((uid) => {
               const cfg = USER_CONFIGS[uid]
               const checked = uid === 'zuo' ? checkedA : checkedB
@@ -92,7 +92,7 @@ export function HeritageCard({ site, checkinSet, onClick }: HeritageCardProps) {
                 <Avatar
                   key={uid}
                   user={cfg}
-                  size={26}
+                  size={22}
                   active={checked}
                   dimWhenInactive
                   title={`${cfg.label}：${checked ? '已打卡' : '未打卡'}`}
@@ -102,20 +102,20 @@ export function HeritageCard({ site, checkinSet, onClick }: HeritageCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2 flex-wrap">
           <span
-            className="px-2 py-0.5 rounded text-xs"
+            className="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs"
             style={{ backgroundColor: catColor.bg, color: catColor.fg }}
           >
             {site.category}
           </span>
-          <span className="text-xs" style={{ color: 'var(--color-mist)' }}>
+          <span className="text-[10px] sm:text-xs" style={{ color: 'var(--color-mist)' }}>
             {site.province}
           </span>
         </div>
 
         <p
-          className="text-xs leading-relaxed line-clamp-2"
+          className="text-[10px] sm:text-xs leading-relaxed line-clamp-2 hidden sm:block"
           style={{ color: 'var(--color-mist)' }}
         >
           {site.description}
