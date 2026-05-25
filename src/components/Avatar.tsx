@@ -31,10 +31,12 @@ export function Avatar({
       style={{
         width: size,
         height: size,
-        border: active ? `2px solid ${user.color}` : `1.5px solid transparent`,
-        boxShadow: active ? `0 0 0 1px rgba(255,255,255,0.5), 0 2px 4px ${user.color}40` : 'none',
-        opacity: dimWhenInactive && !active ? 0.35 : 1,
-        filter: dimWhenInactive && !active ? 'grayscale(0.6)' : 'none',
+        // 弱化边框：用半透明用户色，宽度仅 1px；inactive 时几乎不可见
+        border: active ? `1px solid ${user.color}55` : `1px solid rgba(0,0,0,0.08)`,
+        // 移除发光阴影
+        boxShadow: 'none',
+        opacity: dimWhenInactive && !active ? 0.4 : 1,
+        filter: dimWhenInactive && !active ? 'grayscale(0.5)' : 'none',
         transition: 'all .2s ease',
         flexShrink: 0,
         backgroundColor: '#fff',
