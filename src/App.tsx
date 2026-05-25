@@ -4,6 +4,7 @@ import { IdentityProvider, useIdentity } from './contexts/IdentityContext'
 import { ToastProvider } from './components/Toast'
 import { Onboarding } from './pages/Onboarding'
 import { Home } from './pages/Home'
+import { Heritage } from './pages/Heritage'
 import { Stats } from './pages/Stats'
 import { useRealtime } from './hooks/useRealtime'
 import type { ReactNode } from 'react'
@@ -37,6 +38,14 @@ function AppRoutes() {
           element={
             <AuthGuard>
               <Home />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/heritage"
+          element={
+            <AuthGuard>
+              <Heritage />
             </AuthGuard>
           }
         />

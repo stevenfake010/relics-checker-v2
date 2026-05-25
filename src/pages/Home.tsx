@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { relics } from '../data/relics'
 import { useCheckinSet } from '../hooks/useCheckins'
 import {
@@ -13,7 +12,7 @@ import { Filters } from '../components/Filters'
 import { CityRanking } from '../components/CityRanking'
 import { RelicCard } from '../components/RelicCard'
 import { RelicModal } from '../components/RelicModal'
-import { IdentitySwitcher } from '../components/IdentitySwitcher'
+import { Layout } from '../components/Layout'
 import { hasSupabase } from '../lib/supabase'
 import type { Relic } from '../data/types'
 
@@ -57,37 +56,7 @@ export function Home() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-paper)' }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-40 border-b"
-        style={{
-          backgroundColor: 'var(--color-surface)',
-          borderColor: 'var(--color-border)',
-        }}
-      >
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1
-              className="text-lg font-bold leading-tight"
-              style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-ink)' }}
-            >
-              禁止出境文物
-            </h1>
-            <p className="text-xs" style={{ color: 'var(--color-mist)' }}>
-              195 件国家级文物打卡
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/stats" className="text-sm" style={{ color: 'var(--color-vermilion)' }}>
-              统计 →
-            </Link>
-            <IdentitySwitcher />
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <div className="max-w-5xl mx-auto px-4 py-4">
         {!hasSupabase && (
           <div
@@ -199,25 +168,6 @@ export function Home() {
 
       {/* Modal */}
       <RelicModal relic={selectedRelic} onClose={() => setSelectedRelic(null)} />
-    </div>
-  )
-}
-
-function ThemeToggle() {
-  const toggle = () => {
-    const html = document.documentElement
-    const current = html.getAttribute('data-theme')
-    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark')
-  }
-
-  return (
-    <button
-      onClick={toggle}
-      className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-      style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-ink)' }}
-      title="切换主题"
-    >
-      ◑
-    </button>
+    </Layout>
   )
 }
