@@ -23,6 +23,7 @@ export function Heritage() {
   const [province, setProvince] = useState<string>('')
   const [showUnvisitedOnly, setShowUnvisitedOnly] = useState(false)
   const [sort, setSort] = useState<SortMode>('year-desc')
+  const [provinceExpanded, setProvinceExpanded] = useState(false)
 
   const allProvinces = useMemo(
     () => Array.from(new Set(HERITAGE_SITES.map((s) => s.province))).sort(),
@@ -73,7 +74,7 @@ export function Heritage() {
     return { zuoCount, huangCount, bothCount }
   }, [checkinSet])
 
-  // 省份打卡进度
+  // 省份打卡进度（只列还有未打卡的，按 pending 降序）
   const provinceProgress = useMemo(() => {
     const map = new Map<string, { total: number; visited: number }>()
     for (const s of HERITAGE_SITES) {
@@ -84,8 +85,14 @@ export function Heritage() {
     }
     return Array.from(map.entries())
       .map(([name, d]) => ({ name, ...d, pending: d.total - d.visited }))
+      .filter((p) => p.pending > 0) // 只显示还有未打卡的省份
       .sort((a, b) => b.pending - a.pending || b.total - a.total)
   }, [checkinSet])
+
+  const INITIAL_PROVINCE_COUNT = 6
+  const displayProvinces = provinceExpanded
+    ? provinceProgress
+    : provinceProgress.slice(0, INITIAL_PROVINCE_COUNT)
 
   return (
     <Layout>
@@ -155,31 +162,54 @@ export function Heritage() {
               className="rounded-lg p-4"
               style={{ backgroundColor: 'var(--color-surface)', boxShadow: 'var(--shadow-card)' }}
             >
-              <h3
-                className="text-sm font-medium mb-3"
-                style={{ color: 'var(--color-mist)', fontFamily: 'var(--font-serif)' }}
-              >
-                省份待打卡
-              </h3>
-              <div className="space-y-1.5">
-                {provinceProgress.slice(0, 8).map((p) => (
+              <div className="flex items-center justify-between mb-3">
+                <h3
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--color-mist)', fontFamily: 'var(--font-serif)' }}
+                >
+                  省份待打卡排名
+                </h3>
+                {provinceProgress.length > INITIAL_PROVINCE_COUNT && (
                   <button
-                    key={p.name}
-                    onClick={() => setProvince(province === p.name ? '' : p.name)}
-                    className="w-full flex items-center justify-between text-left text-xs px-2 py-1 rounded transition-all"
+                    onClick={() => setProvinceExpanded((v) => !v)}
+                    className="text-xs px-2 py-0.5 rounded"
                     style={{
-                      backgroundColor:
-                        province === p.name ? 'var(--color-vermilion-light)' : 'transparent',
-                      color: province === p.name ? 'var(--color-vermilion)' : 'var(--color-ink)',
+                      backgroundColor: 'var(--color-surface-alt)',
+                      color: 'var(--color-mist)',
                     }}
                   >
-                    <span>{p.name}</span>
-                    <span style={{ color: 'var(--color-mist)' }}>
-                      {p.visited}/{p.total}
-                    </span>
+                    {provinceExpanded
+                      ? '收起'
+                      : `展开 (${provinceProgress.length - INITIAL_PROVINCE_COUNT}+)`}
                   </button>
-                ))}
+                )}
               </div>
+              {displayProvinces.length === 0 ? (
+                <p className="text-xs" style={{ color: 'var(--color-mist)' }}>
+                  🎉 所有省份都已打卡
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {displayProvinces.map((p) => (
+                    <button
+                      key={p.name}
+                      onClick={() => setProvince(province === p.name ? '' : p.name)}
+                      className="w-full flex items-center justify-between text-left text-xs px-2 py-1.5 rounded transition-all"
+                      style={{
+                        backgroundColor:
+                          province === p.name ? 'var(--color-vermilion-light)' : 'transparent',
+                        color: province === p.name ? 'var(--color-vermilion)' : 'var(--color-ink)',
+                      }}
+                    >
+                      <span>{p.name}</span>
+                      <span style={{ color: 'var(--color-mist)' }}>
+                        待打卡 <b style={{ color: 'var(--color-vermilion)' }}>{p.pending}</b>
+                        <span className="opacity-60"> / {p.total}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </aside>
 
