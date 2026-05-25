@@ -65,7 +65,6 @@ export function useToggleCheckin() {
         )
       } else {
         const newCheckin: Checkin = {
-          id: Date.now(),
           user_id: userId,
           relic_id: relicId,
           checked_at: new Date().toISOString(),

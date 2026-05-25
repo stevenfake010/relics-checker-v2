@@ -3,6 +3,7 @@ import { ERA_LABELS, CAT_LABELS } from '../data/meta'
 import { USER_CONFIGS } from '../contexts/IdentityContext'
 import type { CheckinSet } from '../hooks/useCheckins'
 import { hasPermanentExhibition, getLatestExhibitionYear } from '../logic/filter-logic'
+import { Avatar } from './Avatar'
 
 interface RelicCardProps {
   relic: Relic
@@ -41,26 +42,20 @@ export function RelicCard({ relic, checkinSet, onClick }: RelicCardProps) {
           </p>
         </div>
 
-        {/* Dual seals */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Dual avatars */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {(['zuo', 'huang'] as const).map((uid) => {
             const cfg = USER_CONFIGS[uid]
             const checked = uid === 'zuo' ? checkedA : checkedB
             return (
-              <div
+              <Avatar
                 key={uid}
-                className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold border-2"
-                style={{
-                  fontFamily: 'var(--font-serif)',
-                  borderColor: cfg.color,
-                  backgroundColor: checked ? cfg.color : 'transparent',
-                  color: checked ? '#fff' : cfg.color,
-                  opacity: checked ? 1 : 0.3,
-                }}
-                title={`${cfg.label}: ${checked ? '已打卡' : '未打卡'}`}
-              >
-                {cfg.sealChar}
-              </div>
+                user={cfg}
+                size={28}
+                active={checked}
+                dimWhenInactive
+                title={`${cfg.label}：${checked ? '已打卡' : '未打卡'}`}
+              />
             )
           })}
         </div>

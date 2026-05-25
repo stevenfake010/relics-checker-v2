@@ -3,6 +3,7 @@ import type { Relic } from '../data/types'
 import { ERA_LABELS, CAT_LABELS } from '../data/meta'
 import { useIdentity, USER_CONFIGS } from '../contexts/IdentityContext'
 import { useCheckinSet, useToggleCheckin } from '../hooks/useCheckins'
+import { Avatar } from './Avatar'
 
 interface RelicModalProps {
   relic: Relic | null
@@ -118,17 +119,7 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
             const checked = uid === 'zuo' ? checkedA : checkedB
             return (
               <div key={uid} className="flex items-center gap-2">
-                <div
-                  className="w-8 h-8 rounded flex items-center justify-center text-base font-bold border-2"
-                  style={{
-                    fontFamily: 'var(--font-serif)',
-                    borderColor: cfg.color,
-                    backgroundColor: checked ? cfg.color : 'transparent',
-                    color: checked ? '#fff' : cfg.color,
-                  }}
-                >
-                  {cfg.sealChar}
-                </div>
+                <Avatar user={cfg} size={36} active={checked} dimWhenInactive />
                 <div>
                   <div className="text-xs font-medium" style={{ color: 'var(--color-ink)' }}>
                     {cfg.label}
