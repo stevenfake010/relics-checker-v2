@@ -2,6 +2,7 @@ import type { Relic } from '../data/types'
 import { ERA_LABELS, CAT_LABELS } from '../data/meta'
 import { USER_CONFIGS } from '../contexts/IdentityContext'
 import type { CheckinSet } from '../hooks/useCheckins'
+import { hasPermanentExhibition, getLatestExhibitionYear } from '../logic/filter-logic'
 
 interface RelicCardProps {
   relic: Relic
@@ -10,8 +11,11 @@ interface RelicCardProps {
 }
 
 export function RelicCard({ relic, checkinSet, onClick }: RelicCardProps) {
-  const checkedA = checkinSet.has(`userA:${relic.id}`)
-  const checkedB = checkinSet.has(`userB:${relic.id}`)
+  const checkedA = checkinSet.has(`zuo:${relic.id}`)
+  const checkedB = checkinSet.has(`huang:${relic.id}`)
+  const isPainting = relic.cat === 'painting'
+  const perm = hasPermanentExhibition(relic)
+  const latestYear = getLatestExhibitionYear(relic)
 
   return (
     <button
@@ -39,9 +43,9 @@ export function RelicCard({ relic, checkinSet, onClick }: RelicCardProps) {
 
         {/* Dual seals */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          {(['userA', 'userB'] as const).map((uid) => {
+          {(['zuo', 'huang'] as const).map((uid) => {
             const cfg = USER_CONFIGS[uid]
-            const checked = uid === 'userA' ? checkedA : checkedB
+            const checked = uid === 'zuo' ? checkedA : checkedB
             return (
               <div
                 key={uid}
@@ -82,7 +86,34 @@ export function RelicCard({ relic, checkinSet, onClick }: RelicCardProps) {
         >
           {CAT_LABELS[relic.cat]}
         </span>
-        {relic.noPublicDisplay && (
+
+        {/* 常设/非常设 标签 */}
+        {perm && !isPainting && (
+          <span
+            className="px-2 py-0.5 rounded text-xs"
+            style={{ backgroundColor: '#E8F5E9', color: '#2E7D32' }}
+          >
+            常设
+          </span>
+        )}
+        {perm && isPainting && (
+          <span
+            className="px-2 py-0.5 rounded text-xs"
+            style={{ backgroundColor: '#F3E5F5', color: '#7B1FA2' }}
+          >
+            常设·书画
+          </span>
+        )}
+        {!perm && latestYear && (
+          <span
+            className="px-2 py-0.5 rounded text-xs"
+            style={{ backgroundColor: '#FFF3E0', color: '#E65100' }}
+            title={`最近一次展出：${latestYear} 年`}
+          >
+            {latestYear}年展出
+          </span>
+        )}
+        {!perm && !latestYear && relic.noPublicDisplay && (
           <span
             className="px-2 py-0.5 rounded text-xs"
             style={{

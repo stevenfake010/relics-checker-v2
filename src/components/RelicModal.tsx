@@ -25,8 +25,8 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
 
   if (!relic) return null
 
-  const checkedA = checkinSet.has(`userA:${relic.id}`)
-  const checkedB = checkinSet.has(`userB:${relic.id}`)
+  const checkedA = checkinSet.has(`zuo:${relic.id}`)
+  const checkedB = checkinSet.has(`huang:${relic.id}`)
 
   const handleToggle = () => {
     if (!currentUser) return
@@ -113,9 +113,9 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
           className="flex items-center justify-between p-4 rounded-lg mb-4"
           style={{ backgroundColor: 'var(--color-surface-alt)' }}
         >
-          {(['userA', 'userB'] as const).map((uid) => {
+          {(['zuo', 'huang'] as const).map((uid) => {
             const cfg = USER_CONFIGS[uid]
-            const checked = uid === 'userA' ? checkedA : checkedB
+            const checked = uid === 'zuo' ? checkedA : checkedB
             return (
               <div key={uid} className="flex items-center gap-2">
                 <div

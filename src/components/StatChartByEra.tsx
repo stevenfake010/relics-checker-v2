@@ -8,8 +8,8 @@ interface StatChartByEraProps {
 }
 
 export function StatChartByEra({ data }: StatChartByEraProps) {
-  const cfgA = USER_CONFIGS.userA
-  const cfgB = USER_CONFIGS.userB
+  const cfgA = USER_CONFIGS.zuo
+  const cfgB = USER_CONFIGS.huang
 
   const chartData = data.map((d) => ({
     era: ERA_LABELS[d.era],

@@ -6,8 +6,8 @@ interface DualVennCardProps {
 }
 
 export function DualVennCard({ stats }: DualVennCardProps) {
-  const cfgA = USER_CONFIGS.userA
-  const cfgB = USER_CONFIGS.userB
+  const cfgA = USER_CONFIGS.zuo
+  const cfgB = USER_CONFIGS.huang
 
   return (
     <div

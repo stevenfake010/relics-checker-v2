@@ -17,8 +17,8 @@ export function dualCompare(relics: Relic[], checkinSet: CheckinSet): DualCompar
   let checkedA = 0, checkedB = 0, checkedBoth = 0, onlyA = 0, onlyB = 0, neitherChecked = 0
 
   for (const r of relics) {
-    const ca = checkinSet.has(`userA:${r.id}`)
-    const cb = checkinSet.has(`userB:${r.id}`)
+    const ca = checkinSet.has(`zuo:${r.id}`)
+    const cb = checkinSet.has(`huang:${r.id}`)
     if (ca) checkedA++
     if (cb) checkedB++
     if (ca && cb) checkedBoth++
@@ -55,8 +55,8 @@ export function byEra(relics: Relic[], checkinSet: CheckinSet): EraStats[] {
     }
     const s = map.get(r.era)!
     s.total++
-    if (checkinSet.has(`userA:${r.id}`)) s.checkedA++
-    if (checkinSet.has(`userB:${r.id}`)) s.checkedB++
+    if (checkinSet.has(`zuo:${r.id}`)) s.checkedA++
+    if (checkinSet.has(`huang:${r.id}`)) s.checkedB++
   }
 
   return [...map.values()]
@@ -78,8 +78,8 @@ export function byCat(relics: Relic[], checkinSet: CheckinSet): CatStats[] {
     }
     const s = map.get(r.cat)!
     s.total++
-    if (checkinSet.has(`userA:${r.id}`)) s.checkedA++
-    if (checkinSet.has(`userB:${r.id}`)) s.checkedB++
+    if (checkinSet.has(`zuo:${r.id}`)) s.checkedA++
+    if (checkinSet.has(`huang:${r.id}`)) s.checkedB++
   }
 
   return [...map.values()].sort((a, b) => b.total - a.total)
@@ -110,8 +110,8 @@ export function byMuseum(relics: Relic[], checkinSet: CheckinSet): MuseumStats[]
     }
     const s = map.get(museum)!
     s.total++
-    if (checkinSet.has(`userA:${r.id}`)) s.checkedA++
-    if (checkinSet.has(`userB:${r.id}`)) s.checkedB++
+    if (checkinSet.has(`zuo:${r.id}`)) s.checkedA++
+    if (checkinSet.has(`huang:${r.id}`)) s.checkedB++
   }
 
   // Calculate percentages
