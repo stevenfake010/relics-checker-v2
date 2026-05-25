@@ -27,7 +27,7 @@ describe('dualCompare', () => {
   })
 
   it('counts correctly with partial checkins', () => {
-    const set = new Set(['userA:1', 'userA:2', 'userB:2'])
+    const set = new Set(['zuo:1', 'zuo:2', 'huang:2'])
     const result = dualCompare(relics, set)
     expect(result.checkedA).toBe(2)
     expect(result.checkedB).toBe(1)
@@ -38,7 +38,7 @@ describe('dualCompare', () => {
   })
 
   it('handles all checked', () => {
-    const set = new Set(['userA:1', 'userB:1', 'userA:2', 'userB:2', 'userA:3', 'userB:3'])
+    const set = new Set(['zuo:1', 'huang:1', 'zuo:2', 'huang:2', 'zuo:3', 'huang:3'])
     const result = dualCompare(relics, set)
     expect(result.checkedBoth).toBe(3)
     expect(result.neitherChecked).toBe(0)
@@ -56,7 +56,7 @@ describe('byEra', () => {
   })
 
   it('counts checkins by era', () => {
-    const set = new Set(['userA:1'])
+    const set = new Set(['zuo:1'])
     const result = byEra(relics, set)
     const prehistoric = result.find((e) => e.era === 'prehistoric')
     expect(prehistoric?.checkedA).toBe(1)
@@ -87,7 +87,7 @@ describe('byMuseum', () => {
   })
 
   it('calculates percentages', () => {
-    const set = new Set(['userA:1', 'userA:2'])
+    const set = new Set(['zuo:1', 'zuo:2'])
     const result = byMuseum(relics, set)
     const palace = result.find((m) => m.museum === '故宫博物院')
     expect(palace?.pctA).toBe(100)

@@ -43,9 +43,14 @@ export function Onboarding() {
               >
                 {cfg.sealChar}
               </div>
-              <span className="font-medium" style={{ color: 'var(--color-ink)' }}>
-                {cfg.label}
-              </span>
+              <div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--color-ink)', fontFamily: 'var(--font-serif)' }}>
+                  {cfg.label}
+                </div>
+                <div className="text-xs mt-1" style={{ color: 'var(--color-mist)' }}>
+                  {cfg.fullName}
+                </div>
+              </div>
             </button>
           ))}
         </div>

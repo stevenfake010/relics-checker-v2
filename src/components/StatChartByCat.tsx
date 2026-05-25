@@ -8,8 +8,8 @@ interface StatChartByCatProps {
 }
 
 export function StatChartByCat({ data }: StatChartByCatProps) {
-  const cfgA = USER_CONFIGS.userA
-  const cfgB = USER_CONFIGS.userB
+  const cfgA = USER_CONFIGS.zuo
+  const cfgB = USER_CONFIGS.huang
 
   const chartData = data.map((d) => ({
     cat: CAT_LABELS[d.cat],

@@ -7,8 +7,8 @@ interface MuseumCompletionProps {
 }
 
 export function MuseumCompletion({ data, limit = 15 }: MuseumCompletionProps) {
-  const cfgA = USER_CONFIGS.userA
-  const cfgB = USER_CONFIGS.userB
+  const cfgA = USER_CONFIGS.zuo
+  const cfgB = USER_CONFIGS.huang
   const displayed = data.slice(0, limit)
 
   return (
