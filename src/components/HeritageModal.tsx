@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import type { HeritageSite } from '../data/heritage'
 import { useIdentity, USER_CONFIGS } from '../contexts/IdentityContext'
-import { useHeritageCheckinSet, useToggleHeritageCheckin } from '../hooks/useHeritageCheckins'
+import { useHeritageCheckins, useToggleHeritageCheckin } from '../hooks/useHeritageCheckins'
+import { useHeritageCheckinSet } from '../hooks/useHeritageCheckins'
 import { Avatar } from './Avatar'
+import { uploadCheckinPhoto } from '../lib/cosUpload'
+import { updateHeritageCheckinPhoto } from '../lib/heritageQueries'
+import { useQueryClient } from '@tanstack/react-query'
+import { HERITAGE_CHECKINS_KEY } from '../hooks/useHeritageCheckins'
 
 interface HeritageModalProps {
   site: HeritageSite | null
@@ -18,11 +23,18 @@ const CATEGORY_COLORS: Record<string, { bg: string; fg: string }> = {
 export function HeritageModal({ site, onClose }: HeritageModalProps) {
   const { currentUser } = useIdentity()
   const checkinSet = useHeritageCheckinSet()
+  const { data: checkins } = useHeritageCheckins()
   const { mutate: toggleCheckin } = useToggleHeritageCheckin()
+  const queryClient = useQueryClient()
   const [imgError, setImgError] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setImgError(false)
+    setUploading(false)
+    setUploadProgress(0)
   }, [site?.id])
 
   useEffect(() => {
@@ -39,10 +51,58 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
   const checkedB = checkinSet.has(`huang:${site.id}`)
   const catColor = CATEGORY_COLORS[site.category] ?? CATEGORY_COLORS['文化遗产']
 
+  // Get photos for this site
+  const siteCheckins = (checkins ?? []).filter((c) => c.site_id === site.id && c.photo_url)
+
   const handleToggle = () => {
     if (!currentUser) return
     const checked = checkinSet.has(`${currentUser}:${site.id}`)
     toggleCheckin({ userId: currentUser, siteId: site.id, checked })
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !currentUser || !site) return
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      alert('请选择图片文件')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('图片不能超过 10MB')
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress(0)
+
+    try {
+      const url = await uploadCheckinPhoto(file, site.id, currentUser, setUploadProgress)
+
+      // If not checked in yet, do a checkin with photo
+      if (!checkinSet.has(`${currentUser}:${site.id}`)) {
+        toggleCheckin({ userId: currentUser, siteId: site.id, checked: false })
+      }
+
+      // Update photo_url in Supabase
+      await updateHeritageCheckinPhoto(currentUser, site.id, url)
+
+      // Refresh checkins
+      queryClient.invalidateQueries({ queryKey: HERITAGE_CHECKINS_KEY })
+    } catch (err) {
+      console.error('Upload failed:', err)
+      alert('上传失败，请重试')
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
+      // Reset file input
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   return (
@@ -153,29 +213,110 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
             })}
           </div>
 
-          {currentUser ? (
-            <button
-              onClick={handleToggle}
-              className="w-full py-3 rounded-lg font-medium text-sm transition-all"
-              style={{
-                backgroundColor: checkinSet.has(`${currentUser}:${site.id}`)
-                  ? 'var(--color-surface-alt)'
-                  : 'var(--color-vermilion)',
-                color: checkinSet.has(`${currentUser}:${site.id}`)
-                  ? 'var(--color-vermilion)'
-                  : '#fff',
-                border: `1px solid var(--color-vermilion)`,
-              }}
-            >
-              {checkinSet.has(`${currentUser}:${site.id}`)
-                ? `✓ 已访问（${USER_CONFIGS[currentUser].label}）— 点击取消`
-                : `打卡 — ${USER_CONFIGS[currentUser].label}`}
-            </button>
-          ) : (
-            <p className="text-sm text-center" style={{ color: 'var(--color-mist)' }}>
-              请先选择身份才能打卡
-            </p>
+          {/* Checkin photos */}
+          {siteCheckins.length > 0 && (
+            <div className="mb-4">
+              <h3
+                className="text-sm font-medium mb-2"
+                style={{ color: 'var(--color-mist)', fontFamily: 'var(--font-serif)' }}
+              >
+                📸 打卡照片
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {siteCheckins.map((c) => {
+                  const cfg = USER_CONFIGS[c.user_id as keyof typeof USER_CONFIGS]
+                  return (
+                    <div key={`${c.user_id}-${c.site_id}`} className="relative rounded-lg overflow-hidden">
+                      <img
+                        src={c.photo_url!}
+                        alt={`${cfg?.label ?? c.user_id} 的打卡照片`}
+                        className="w-full aspect-square object-cover"
+                      />
+                      <div
+                        className="absolute bottom-0 left-0 right-0 px-2 py-1 flex items-center gap-1"
+                        style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+                      >
+                        {cfg && <Avatar user={cfg} size={18} active />}
+                        <span className="text-xs text-white">
+                          {cfg?.label ?? c.user_id}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
+
+          {/* Action buttons */}
+          <div className="space-y-2">
+            {currentUser ? (
+              <>
+                <button
+                  onClick={handleToggle}
+                  className="w-full py-3 rounded-lg font-medium text-sm transition-all"
+                  style={{
+                    backgroundColor: checkinSet.has(`${currentUser}:${site.id}`)
+                      ? 'var(--color-surface-alt)'
+                      : 'var(--color-vermilion)',
+                    color: checkinSet.has(`${currentUser}:${site.id}`)
+                      ? 'var(--color-vermilion)'
+                      : '#fff',
+                    border: `1px solid var(--color-vermilion)`,
+                  }}
+                >
+                  {checkinSet.has(`${currentUser}:${site.id}`)
+                    ? `✓ 已访问（${USER_CONFIGS[currentUser].label}）— 点击取消`
+                    : `打卡 — ${USER_CONFIGS[currentUser].label}`}
+                </button>
+
+                {/* Upload photo button */}
+                <button
+                  onClick={handleUploadClick}
+                  disabled={uploading}
+                  className="w-full py-3 rounded-lg font-medium text-sm transition-all"
+                  style={{
+                    backgroundColor: uploading ? 'var(--color-surface-alt)' : 'var(--color-surface-alt)',
+                    color: 'var(--color-ink)',
+                    border: '1px solid var(--color-border)',
+                    opacity: uploading ? 0.7 : 1,
+                  }}
+                >
+                  {uploading
+                    ? `📤 上传中 ${uploadProgress}%`
+                    : '📷 上传打卡照片'}
+                </button>
+
+                {/* Upload progress bar */}
+                {uploading && (
+                  <div
+                    className="h-1.5 rounded-full overflow-hidden"
+                    style={{ backgroundColor: 'var(--color-surface-alt)' }}
+                  >
+                    <div
+                      className="h-full transition-all duration-300"
+                      style={{
+                        width: `${uploadProgress}%`,
+                        backgroundColor: 'var(--color-vermilion)',
+                      }}
+                    />
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </>
+            ) : (
+              <p className="text-sm text-center" style={{ color: 'var(--color-mist)' }}>
+                请先选择身份才能打卡
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
