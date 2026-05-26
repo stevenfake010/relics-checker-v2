@@ -32,7 +32,7 @@ export function Layout({ children, hideTabs = false }: LayoutProps) {
                 className="text-lg font-bold leading-tight"
                 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-ink)' }}
               >
-                文物足迹
+                文化足迹
               </h1>
               <p className="text-xs" style={{ color: 'var(--color-mist)' }}>
                 禁止出境文物 + 世界遗产

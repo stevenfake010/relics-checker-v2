@@ -21,7 +21,8 @@ export function Heritage() {
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState<CatFilter>('all')
   const [province, setProvince] = useState<string>('')
-  const [showUnvisitedOnly, setShowUnvisitedOnly] = useState(false)
+  const [checkedByA, setCheckedByA] = useState<boolean | null>(null) // zuo/佑
+  const [checkedByB, setCheckedByB] = useState<boolean | null>(null) // huang/宝
   const [sort, setSort] = useState<SortMode>('year-desc')
   const [provinceExpanded, setProvinceExpanded] = useState(false)
 
@@ -43,13 +44,22 @@ export function Heritage() {
           s.description.toLowerCase().includes(kw)
       )
     }
-    if (showUnvisitedOnly) {
-      list = list.filter(
-        (s) => !checkinSet.has(`zuo:${s.id}`) && !checkinSet.has(`huang:${s.id}`)
-      )
+    // 佑(zuo) filter
+    if (checkedByA !== null) {
+      list = list.filter((s) => {
+        const checked = checkinSet.has(`zuo:${s.id}`)
+        return checkedByA ? checked : !checked
+      })
+    }
+    // 宝(huang) filter
+    if (checkedByB !== null) {
+      list = list.filter((s) => {
+        const checked = checkinSet.has(`huang:${s.id}`)
+        return checkedByB ? checked : !checked
+      })
     }
     return list
-  }, [cat, province, search, showUnvisitedOnly, checkinSet])
+  }, [cat, province, search, checkedByA, checkedByB, checkinSet])
 
   const sorted = useMemo(() => {
     const arr = [...filtered]
@@ -263,17 +273,13 @@ export function Heritage() {
                 <Chip active={sort === 'year-desc'} onClick={() => setSort('year-desc')}>列入时间 新→旧</Chip>
                 <Chip active={sort === 'year-asc'} onClick={() => setSort('year-asc')}>列入时间 旧→新</Chip>
                 <Chip active={sort === 'province'} onClick={() => setSort('province')}>按省份</Chip>
-                <label
-                  className="ml-auto inline-flex items-center gap-1.5 text-xs cursor-pointer select-none"
-                  style={{ color: 'var(--color-mist)' }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={showUnvisitedOnly}
-                    onChange={(e) => setShowUnvisitedOnly(e.target.checked)}
-                  />
-                  仅看未访问
-                </label>
+              </div>
+
+              {/* Checkin status filters */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs" style={{ color: 'var(--color-mist)' }}>打卡：</span>
+                <ToggleChip label="佑" value={checkedByA} onChange={setCheckedByA} />
+                <ToggleChip label="宝" value={checkedByB} onChange={setCheckedByB} />
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
@@ -344,6 +350,39 @@ function Chip({
       }}
     >
       {children}
+    </button>
+  )
+}
+
+function ToggleChip({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: boolean | null
+  onChange: (v: boolean | null) => void
+}) {
+  const cycle = () => {
+    if (value === null) onChange(true)
+    else if (value === true) onChange(false)
+    else onChange(null)
+  }
+
+  const display = value === null ? `${label}：全部` : value ? `${label}：已访问` : `${label}：未访问`
+  const color = value === null ? 'var(--color-mist)' : value ? 'var(--color-jade)' : 'var(--color-vermilion)'
+
+  return (
+    <button
+      onClick={cycle}
+      className="text-xs px-2 py-1 rounded border transition-all"
+      style={{
+        borderColor: color,
+        color,
+        backgroundColor: 'var(--color-surface)',
+      }}
+    >
+      {display}
     </button>
   )
 }
