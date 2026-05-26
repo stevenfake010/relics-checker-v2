@@ -5,6 +5,7 @@ import { useHeritageCheckins, useToggleHeritageCheckin, HERITAGE_CHECKINS_KEY } 
 import { useHeritageCheckinSet } from '../hooks/useHeritageCheckins'
 import { Avatar } from './Avatar'
 import { PhotoLightbox } from './PhotoLightbox'
+import { SignedImage } from './SignedImage'
 import { uploadCheckinPhoto } from '../lib/cosUpload'
 import { updateHeritageCheckinPhoto, deleteHeritageCheckinPhoto } from '../lib/heritageQueries'
 import { useQueryClient } from '@tanstack/react-query'
@@ -146,7 +147,7 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
             style={{ backgroundColor: 'var(--color-surface-alt)' }}
           >
             {!imgError ? (
-              <img
+              <SignedImage
                 src={site.imageUrl}
                 alt={site.name}
                 onError={() => setImgError(true)}
@@ -249,7 +250,7 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
                     const isMyPhoto = c.user_id === currentUser
                     return (
                       <div key={`${c.user_id}-${c.site_id}`} className="relative rounded-lg overflow-hidden group">
-                        <img
+                        <SignedImage
                           src={c.photo_url!}
                           alt={`${cfg?.label ?? c.user_id} 的打卡照片`}
                           className="w-full aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity"

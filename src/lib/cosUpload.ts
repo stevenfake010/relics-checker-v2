@@ -6,7 +6,10 @@ import COS from 'cos-js-sdk-v5'
 
 const cos = new COS({
   getAuthorization: async (_options, callback) => {
-    const resp = await fetch('/api/cos-sts')
+    const authToken = localStorage.getItem('auth_token') ?? ''
+    const resp = await fetch('/api/cos-sts', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
     if (!resp.ok) throw new Error(`STS request failed: ${resp.status}`)
     const data = await resp.json()
     callback({

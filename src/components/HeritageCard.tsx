@@ -3,6 +3,7 @@ import type { HeritageSite } from '../data/heritage'
 import { USER_CONFIGS } from '../contexts/IdentityContext'
 import type { HeritageCheckinSet } from '../hooks/useHeritageCheckins'
 import { Avatar } from './Avatar'
+import { SignedImage } from './SignedImage'
 
 interface HeritageCardProps {
   site: HeritageSite
@@ -38,7 +39,7 @@ export function HeritageCard({ site, checkinSet, onClick }: HeritageCardProps) {
         style={{ aspectRatio: '1 / 1', backgroundColor: 'var(--color-surface-alt)' }}
       >
         {!imgError ? (
-          <img
+          <SignedImage
             src={site.imageUrl}
             alt={site.name}
             loading="lazy"

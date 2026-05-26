@@ -5,6 +5,7 @@ import { useIdentity, USER_CONFIGS } from '../contexts/IdentityContext'
 import { useCheckins, useCheckinSet, useToggleCheckin, CHECKINS_KEY } from '../hooks/useCheckins'
 import { Avatar } from './Avatar'
 import { PhotoLightbox } from './PhotoLightbox'
+import { SignedImage } from './SignedImage'
 import { uploadCheckinPhoto } from '../lib/cosUpload'
 import { updateCheckinPhoto, deleteCheckinPhoto } from '../lib/queries'
 import { useQueryClient } from '@tanstack/react-query'
@@ -231,7 +232,7 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
                   const isMyPhoto = c.user_id === currentUser
                   return (
                     <div key={`${c.user_id}-${c.relic_id}`} className="relative rounded-lg overflow-hidden group">
-                      <img
+                      <SignedImage
                         src={c.photo_url!}
                         alt={`${cfg?.label ?? c.user_id} 的打卡照片`}
                         className="w-full aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity"

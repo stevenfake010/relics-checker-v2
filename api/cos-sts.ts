@@ -1,5 +1,22 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import STS from 'qcloud-cos-sts'
+import crypto from 'crypto'
+
+const VERIFY_SECRET = process.env.VERIFY_SECRET || 'relics-checker-v2-default-secret'
+
+function verifyAuthToken(token: string): boolean {
+  try {
+    const [payloadB64, hmac] = token.split('.')
+    if (!payloadB64 || !hmac) return false
+    const payload = Buffer.from(payloadB64, 'base64').toString()
+    const expectedHmac = crypto.createHmac('sha256', VERIFY_SECRET).update(payload).digest('hex')
+    if (hmac !== expectedHmac) return false
+    const data = JSON.parse(payload)
+    return data.exp > Date.now()
+  } catch {
+    return false
+  }
+}
 
 const config = {
   secretId: process.env.COS_SECRET_ID!,
@@ -23,12 +40,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   res.setHeader('Vary', 'Origin')
   if (req.method === 'OPTIONS') return res.status(200).end()
 
-  // Rate limit: only allow GET
+  // Only allow GET
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+
+  // Verify auth token
+  const authHeader = req.headers.authorization ?? ''
+  const token = authHeader.replace(/^Bearer\s+/i, '')
+  if (!verifyAuthToken(token)) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
 
   try {
     const appId = config.bucket.split('-').pop()

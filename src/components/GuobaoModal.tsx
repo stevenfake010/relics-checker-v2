@@ -4,6 +4,7 @@ import { useIdentity, USER_CONFIGS } from '../contexts/IdentityContext'
 import { useGuobaoCheckins, useGuobaoCheckinSet, useToggleGuobaoCheckin, GUOBAO_CHECKINS_KEY } from '../hooks/useGuobaoCheckins'
 import { Avatar } from './Avatar'
 import { PhotoLightbox } from './PhotoLightbox'
+import { SignedImage } from './SignedImage'
 import { uploadCheckinPhoto } from '../lib/cosUpload'
 import { updateGuobaoCheckinPhoto, deleteGuobaoCheckinPhoto } from '../lib/guobaoQueries'
 import { useQueryClient } from '@tanstack/react-query'
@@ -187,7 +188,7 @@ export function GuobaoModal({ site, onClose }: GuobaoModalProps) {
                   const isMyPhoto = c.user_id === currentUser
                   return (
                     <div key={`${c.user_id}-${c.site_id}`} className="relative rounded-lg overflow-hidden">
-                      <img
+                      <SignedImage
                         src={c.photo_url!}
                         alt={`${cfg?.label ?? c.user_id} 的打卡照片`}
                         className="w-full aspect-square object-cover cursor-pointer hover:opacity-90 transition-opacity"

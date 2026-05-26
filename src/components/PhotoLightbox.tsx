@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useSignedUrl } from '../hooks/useSignedUrl'
 
 interface PhotoLightboxProps {
   src: string
@@ -7,6 +8,8 @@ interface PhotoLightboxProps {
 }
 
 export function PhotoLightbox({ src, alt, onClose }: PhotoLightboxProps) {
+  const signedSrc = useSignedUrl(src)
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -28,12 +31,16 @@ export function PhotoLightbox({ src, alt, onClose }: PhotoLightboxProps) {
       >
         ✕
       </button>
-      <img
-        src={src}
-        alt={alt ?? '照片预览'}
-        className="max-w-full max-h-[90vh] object-contain rounded-lg"
-        onClick={(e) => e.stopPropagation()}
-      />
+      {signedSrc ? (
+        <img
+          src={signedSrc}
+          alt={alt ?? '照片预览'}
+          className="max-w-full max-h-[90vh] object-contain rounded-lg"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        <div className="text-white text-sm">加载中...</div>
+      )}
     </div>
   )
 }
