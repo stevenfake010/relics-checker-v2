@@ -11,6 +11,7 @@ interface LayoutProps {
 const TABS = [
   { to: '/', label: '🏛️ 文物', exact: true },
   { to: '/heritage', label: '🌏 世界遗产' },
+  { to: '/guobao', label: '🏯 国保' },
   { to: '/stats', label: '📊 统计' },
 ]
 
@@ -35,7 +36,7 @@ export function Layout({ children, hideTabs = false }: LayoutProps) {
                 文化足迹
               </h1>
               <p className="text-xs" style={{ color: 'var(--color-mist)' }}>
-                禁止出境文物 + 世界遗产
+                禁止出境文物 + 世界遗产 + 国保单位
               </p>
             </div>
           </div>

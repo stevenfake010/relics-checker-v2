@@ -6,6 +6,7 @@ import { Onboarding } from './pages/Onboarding'
 import { Home } from './pages/Home'
 import { Heritage } from './pages/Heritage'
 import { Stats } from './pages/Stats'
+import { Guobao } from './pages/Guobao'
 import { useRealtime } from './hooks/useRealtime'
 import type { ReactNode } from 'react'
 
@@ -46,6 +47,14 @@ function AppRoutes() {
           element={
             <AuthGuard>
               <Heritage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/guobao"
+          element={
+            <AuthGuard>
+              <Guobao />
             </AuthGuard>
           }
         />
