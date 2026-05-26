@@ -48,6 +48,18 @@ export async function updateHeritageCheckinPhoto(userId: string, siteId: string,
   }
 }
 
+export async function deleteHeritageCheckinPhoto(userId: string, siteId: string): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase
+    .from('heritage_checkins')
+    .update({ photo_url: null } as never)
+    .eq('user_id', userId)
+    .eq('site_id', siteId)
+  if (error) {
+    console.error('[heritageQueries] delete photo error:', error)
+  }
+}
+
 export async function removeHeritageCheckin(userId: string, siteId: string): Promise<void> {
   if (!supabase) return
   const { error } = await supabase
