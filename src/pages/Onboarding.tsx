@@ -2,17 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { type UserId, USER_CONFIGS, useIdentity } from '../contexts/IdentityContext'
 import { Avatar } from '../components/Avatar'
 
-const PASSCODES: Record<UserId, string> = {
-  zuo: '爱宝爱宝',
-  huang: '爱佑爱佑',
-}
-
 export function Onboarding() {
   const { setCurrentUser } = useIdentity()
   const [selectedUser, setSelectedUser] = useState<UserId | null>(null)
   const [passcode, setPasscode] = useState('')
   const [error, setError] = useState(false)
   const [shaking, setShaking] = useState(false)
+  const [verifying, setVerifying] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -27,17 +23,38 @@ export function Onboarding() {
     setError(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedUser) return
+    if (!selectedUser || !passcode.trim() || verifying) return
 
-    if (passcode === PASSCODES[selectedUser]) {
-      setCurrentUser(selectedUser)
-    } else {
+    setVerifying(true)
+    setError(false)
+
+    try {
+      const resp = await fetch('/api/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: selectedUser, passcode: passcode.trim() }),
+      })
+
+      if (resp.ok) {
+        const data = await resp.json()
+        // Store token for future use
+        localStorage.setItem('auth_token', data.token)
+        setCurrentUser(selectedUser)
+      } else {
+        setError(true)
+        setShaking(true)
+        setTimeout(() => setShaking(false), 500)
+        setTimeout(() => setError(false), 2000)
+      }
+    } catch {
       setError(true)
       setShaking(true)
       setTimeout(() => setShaking(false), 500)
       setTimeout(() => setError(false), 2000)
+    } finally {
+      setVerifying(false)
     }
   }
 
@@ -70,7 +87,6 @@ export function Onboarding() {
         />
 
         {!selectedUser ? (
-          /* ---- Identity Selection ---- */
           <>
             <p className="mb-8" style={{ color: 'var(--color-ink)' }}>
               选择你的身份
@@ -112,7 +128,6 @@ export function Onboarding() {
             </p>
           </>
         ) : (
-          /* ---- Passcode Verification ---- */
           <div
             className="mx-auto max-w-xs rounded-2xl p-8 transition-all"
             style={{
@@ -163,6 +178,7 @@ export function Onboarding() {
                     setError(false)
                   }}
                   placeholder="输入口令..."
+                  disabled={verifying}
                   className="w-full px-4 py-3 rounded-xl text-center text-lg tracking-widest transition-all"
                   style={{
                     backgroundColor: 'var(--color-surface-alt)',
@@ -170,6 +186,7 @@ export function Onboarding() {
                     border: `2px solid ${error ? '#ef4444' : 'var(--color-border)'}`,
                     outline: 'none',
                     fontFamily: 'var(--font-serif)',
+                    opacity: verifying ? 0.6 : 1,
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = error ? '#ef4444' : selectedCfg!.color
@@ -190,16 +207,16 @@ export function Onboarding() {
 
               <button
                 type="submit"
-                disabled={!passcode.trim()}
+                disabled={!passcode.trim() || verifying}
                 className="w-full py-3 rounded-xl font-medium text-sm transition-all active:scale-95"
                 style={{
                   backgroundColor: passcode.trim() ? selectedCfg!.color : 'var(--color-surface-alt)',
                   color: passcode.trim() ? '#fff' : 'var(--color-mist)',
-                  opacity: passcode.trim() ? 1 : 0.6,
-                  cursor: passcode.trim() ? 'pointer' : 'not-allowed',
+                  opacity: passcode.trim() && !verifying ? 1 : 0.6,
+                  cursor: passcode.trim() && !verifying ? 'pointer' : 'not-allowed',
                 }}
               >
-                验证并进入 →
+                {verifying ? '验证中...' : '验证并进入 →'}
               </button>
             </form>
 
@@ -213,7 +230,6 @@ export function Onboarding() {
         )}
       </div>
 
-      {/* Shake animation */}
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
