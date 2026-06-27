@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { relics } from '../data/relics'
-import { useCheckinSet } from '../hooks/useCheckins'
+import { useCheckins, useCheckinSet } from '../hooks/useCheckins'
+import { usePersistedState } from '../hooks/usePersistedState'
 import {
   filterRelics, sortByCity, sortByPermanentPriority, rankCitiesByPending,
   isCountedForPermanent, DEFAULT_FILTER,
@@ -13,12 +14,14 @@ import { CityRanking } from '../components/CityRanking'
 import { RelicCard } from '../components/RelicCard'
 import { RelicModal } from '../components/RelicModal'
 import { Layout } from '../components/Layout'
+import { QueryState } from '../components/QueryState'
 import type { Relic } from '../data/types'
 
 export function Home() {
-  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER)
+  const checkinsQuery = useCheckins()
+  const [filter, setFilter] = usePersistedState<FilterState>('filters:relics', DEFAULT_FILTER)
   const [selectedRelic, setSelectedRelic] = useState<Relic | null>(null)
-  const [sortMode, setSortMode] = useState<'id' | 'city' | 'permanent'>('id')
+  const [sortMode, setSortMode] = usePersistedState<'id' | 'city' | 'permanent'>('sort:relics', 'id')
   const checkinSet = useCheckinSet()
 
   // 选中城市时，自动用"常设优先"排序
@@ -52,6 +55,23 @@ export function Home() {
         document.getElementById('relic-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 100)
     }
+  }
+
+  if (!checkinsQuery.data && (checkinsQuery.isPending || checkinsQuery.isError)) {
+    return (
+      <Layout>
+        <div className="max-w-5xl mx-auto px-4 py-4">
+          <QueryState
+            isLoading={checkinsQuery.isPending}
+            isError={checkinsQuery.isError}
+            error={checkinsQuery.error}
+            onRetry={() => {
+              void checkinsQuery.refetch()
+            }}
+          />
+        </div>
+      </Layout>
+    )
   }
 
   return (

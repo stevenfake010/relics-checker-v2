@@ -1,5 +1,6 @@
 import { deleteCheckin, fetchCheckinRows, saveCheckin, updateCheckinPhoto as updatePhoto } from './checkinApi'
 import type { UserId } from '../contexts/IdentityContext'
+import { deleteCheckinPhotoObject } from './cosUpload'
 
 export interface GuobaoCheckin {
   user_id: string
@@ -9,12 +10,7 @@ export interface GuobaoCheckin {
 }
 
 export async function fetchGuobaoCheckins(): Promise<GuobaoCheckin[]> {
-  try {
-    return await fetchCheckinRows<GuobaoCheckin>('guobao')
-  } catch (error) {
-    console.error('[guobaoQueries] fetch error:', error)
-    return []
-  }
+  return fetchCheckinRows<GuobaoCheckin>('guobao')
 }
 
 export async function addGuobaoCheckin(
@@ -33,6 +29,7 @@ export async function updateGuobaoCheckinPhoto(userId: UserId, siteId: string, p
   await updatePhoto('guobao', userId, siteId, photoUrl)
 }
 
-export async function deleteGuobaoCheckinPhoto(userId: UserId, siteId: string): Promise<void> {
+export async function deleteGuobaoCheckinPhoto(userId: UserId, siteId: string, photoUrl?: string): Promise<void> {
+  if (photoUrl) await deleteCheckinPhotoObject(photoUrl)
   await updatePhoto('guobao', userId, siteId, null)
 }

@@ -37,17 +37,17 @@ export function WorldModal({ site, onClose }: WorldModalProps) {
   const handleToggle = () => {
     if (!currentUser) return
     const checked = checkinSet.has(`${currentUser}:${site.id}`)
-    toggleCheckin({ userId: currentUser, siteId: site.id, checked })
+    toggleCheckin({ userId: currentUser, itemId: site.id, checked })
   }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4"
       style={{ backgroundColor: 'rgba(26,20,16,0.6)' }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl p-6 relative max-h-[90vh] overflow-y-auto"
+        className="w-full h-full sm:h-auto sm:max-w-lg sm:rounded-xl p-6 relative sm:max-h-[90vh] overflow-y-auto"
         style={{ backgroundColor: 'var(--color-surface)', boxShadow: 'var(--shadow-modal)' }}
         onClick={(e) => e.stopPropagation()}
       >

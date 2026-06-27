@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getCheckinTable } from '../../api/_lib/checkinTables.js'
+import { getCheckinTable, normalizeItemId } from '../../api/_lib/checkinTables.js'
 
 describe('getCheckinTable', () => {
   it.each([
@@ -17,4 +17,12 @@ describe('getCheckinTable', () => {
       expect(getCheckinTable(table)?.table).toBe(table)
     }
   )
+
+  it('keeps text site ids as strings for non-relic resources', () => {
+    const heritage = getCheckinTable('heritage')
+    const relics = getCheckinTable('relics')
+
+    expect(heritage && normalizeItemId(heritage, '1')).toBe('1')
+    expect(relics && normalizeItemId(relics, '1')).toBe(1)
+  })
 })

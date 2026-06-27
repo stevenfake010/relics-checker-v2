@@ -8,12 +8,7 @@ export interface WorldCheckin {
 }
 
 export async function fetchWorldCheckins(): Promise<WorldCheckin[]> {
-  try {
-    return await fetchCheckinRows<WorldCheckin>('world')
-  } catch (error) {
-    console.error('[worldQueries] fetch error:', error)
-    return []
-  }
+  return fetchCheckinRows<WorldCheckin>('world')
 }
 
 export async function addWorldCheckin(userId: UserId, siteId: string): Promise<WorldCheckin> {

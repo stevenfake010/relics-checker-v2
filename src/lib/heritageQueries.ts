@@ -1,5 +1,6 @@
 import { deleteCheckin, fetchCheckinRows, saveCheckin, updateCheckinPhoto as updatePhoto } from './checkinApi'
 import type { UserId } from '../contexts/IdentityContext'
+import { deleteCheckinPhotoObject } from './cosUpload'
 
 export interface HeritageCheckin {
   user_id: string
@@ -9,12 +10,7 @@ export interface HeritageCheckin {
 }
 
 export async function fetchHeritageCheckins(): Promise<HeritageCheckin[]> {
-  try {
-    return await fetchCheckinRows<HeritageCheckin>('heritage')
-  } catch (error) {
-    console.error('[heritageQueries] fetch error:', error)
-    return []
-  }
+  return fetchCheckinRows<HeritageCheckin>('heritage')
 }
 
 export async function addHeritageCheckin(
@@ -29,7 +25,8 @@ export async function updateHeritageCheckinPhoto(userId: UserId, siteId: string,
   await updatePhoto('heritage', userId, siteId, photoUrl)
 }
 
-export async function deleteHeritageCheckinPhoto(userId: UserId, siteId: string): Promise<void> {
+export async function deleteHeritageCheckinPhoto(userId: UserId, siteId: string, photoUrl?: string): Promise<void> {
+  if (photoUrl) await deleteCheckinPhotoObject(photoUrl)
   await updatePhoto('heritage', userId, siteId, null)
 }
 

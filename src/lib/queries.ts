@@ -1,5 +1,6 @@
 import { deleteCheckin, fetchCheckinRows, saveCheckin, updateCheckinPhoto as updatePhoto } from './checkinApi'
 import type { UserId } from '../contexts/IdentityContext'
+import { deleteCheckinPhotoObject } from './cosUpload'
 
 export interface Checkin {
   user_id: string
@@ -10,12 +11,7 @@ export interface Checkin {
 
 // Fetch all checkins
 export async function fetchCheckins(): Promise<Checkin[]> {
-  try {
-    return await fetchCheckinRows<Checkin>('relics')
-  } catch (error) {
-    console.error('[queries] fetchCheckins error:', error)
-    return []
-  }
+  return fetchCheckinRows<Checkin>('relics')
 }
 
 // Add a checkin
@@ -29,7 +25,8 @@ export async function updateCheckinPhoto(userId: UserId, relicId: number, photoU
 }
 
 // Delete photo from a relic checkin
-export async function deleteCheckinPhoto(userId: UserId, relicId: number): Promise<void> {
+export async function deleteCheckinPhoto(userId: UserId, relicId: number, photoUrl?: string): Promise<void> {
+  if (photoUrl) await deleteCheckinPhotoObject(photoUrl)
   await updatePhoto('relics', userId, relicId, null)
 }
 

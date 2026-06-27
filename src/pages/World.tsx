@@ -1,25 +1,29 @@
 import { useState, useMemo } from 'react'
 import { WORLD_SITES, WORLD_CATEGORIES, type WorldSite, type WorldCategory } from '../data/world'
-import { useWorldCheckinSet } from '../hooks/useWorldCheckins'
+import { useWorldCheckins, useWorldCheckinSet } from '../hooks/useWorldCheckins'
+import { usePersistedState } from '../hooks/usePersistedState'
 import { WorldCard } from '../components/WorldCard'
 import { WorldModal } from '../components/WorldModal'
 import { Layout } from '../components/Layout'
 import { USER_CONFIGS } from '../contexts/IdentityContext'
 import { Avatar } from '../components/Avatar'
+import { Chip, ToggleChip } from '../components/FilterControls'
+import { QueryState } from '../components/QueryState'
 
 type CatFilter = 'all' | WorldCategory
 
 const TOTAL = WORLD_SITES.length
 
 export function World() {
+  const checkinsQuery = useWorldCheckins()
   const checkinSet = useWorldCheckinSet()
   const [selected, setSelected] = useState<WorldSite | null>(null)
-  const [search, setSearch] = useState('')
-  const [cat, setCat] = useState<CatFilter>('all')
-  const [region, setRegion] = useState('')
-  const [country, setCountry] = useState('')
-  const [checkedByA, setCheckedByA] = useState<boolean | null>(null)
-  const [checkedByB, setCheckedByB] = useState<boolean | null>(null)
+  const [search, setSearch] = usePersistedState('filters:world:search', '')
+  const [cat, setCat] = usePersistedState<CatFilter>('filters:world:cat', 'all')
+  const [region, setRegion] = usePersistedState('filters:world:region', '')
+  const [country, setCountry] = usePersistedState('filters:world:country', '')
+  const [checkedByA, setCheckedByA] = usePersistedState<boolean | null>('filters:world:zuo', null)
+  const [checkedByB, setCheckedByB] = usePersistedState<boolean | null>('filters:world:huang', null)
 
   const allRegions = useMemo(
     () => Array.from(new Set(WORLD_SITES.map((s) => s.region))).sort(),
@@ -84,6 +88,23 @@ export function World() {
       .map(([name, d]) => ({ name, ...d, pending: d.total - d.visited }))
       .sort((a, b) => b.pending - a.pending || b.total - a.total)
   }, [checkinSet])
+
+  if (!checkinsQuery.data && (checkinsQuery.isPending || checkinsQuery.isError)) {
+    return (
+      <Layout>
+        <div className="max-w-5xl mx-auto px-4 py-4">
+          <QueryState
+            isLoading={checkinsQuery.isPending}
+            isError={checkinsQuery.isError}
+            error={checkinsQuery.error}
+            onRetry={() => {
+              void checkinsQuery.refetch()
+            }}
+          />
+        </div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
@@ -233,37 +254,5 @@ export function World() {
 
       <WorldModal site={selected} onClose={() => setSelected(null)} />
     </Layout>
-  )
-}
-
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-2 py-1 rounded text-xs transition-all"
-      style={{
-        backgroundColor: active ? 'var(--color-vermilion)' : 'var(--color-surface-alt)',
-        color: active ? '#fff' : 'var(--color-ink)',
-        border: `1px solid ${active ? 'var(--color-vermilion)' : 'var(--color-border)'}`,
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
-function ToggleChip({ label, value, onChange }: { label: string; value: boolean | null; onChange: (v: boolean | null) => void }) {
-  const cycle = () => {
-    if (value === null) onChange(true)
-    else if (value === true) onChange(false)
-    else onChange(null)
-  }
-  const display = value === null ? `${label}：全部` : value ? `${label}：已打卡` : `${label}：未打卡`
-  const color = value === null ? 'var(--color-mist)' : value ? 'var(--color-jade)' : 'var(--color-vermilion)'
-  return (
-    <button onClick={cycle} className="text-xs px-2 py-1 rounded border transition-all"
-      style={{ borderColor: color, color, backgroundColor: 'var(--color-surface)' }}>
-      {display}
-    </button>
   )
 }

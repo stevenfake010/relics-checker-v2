@@ -64,3 +64,19 @@ export async function uploadCheckinPhoto(
     )
   })
 }
+
+export async function deleteCheckinPhotoObject(url: string): Promise<void> {
+  const authToken = getAuthToken()
+  if (!authToken) throw new Error('Not authenticated')
+
+  const resp = await fetch('/api/cos-delete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ url }),
+  })
+
+  if (!resp.ok) throw new Error(`Delete object failed: ${resp.status}`)
+}

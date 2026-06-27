@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import type { HeritageSite } from '../data/heritage'
-import { USER_CONFIGS } from '../contexts/IdentityContext'
 import type { HeritageCheckinSet } from '../hooks/useHeritageCheckins'
-import { Avatar } from './Avatar'
+import { CheckinAvatars } from './CheckinAvatars'
 import { SignedImage } from './SignedImage'
 
 interface HeritageCardProps {
@@ -18,8 +17,6 @@ const CATEGORY_COLORS: Record<string, { bg: string; fg: string }> = {
 }
 
 export function HeritageCard({ site, checkinSet, onClick }: HeritageCardProps) {
-  const checkedA = checkinSet.has(`zuo:${site.id}`)
-  const checkedB = checkinSet.has(`huang:${site.id}`)
   const [imgError, setImgError] = useState(false)
   const catColor = CATEGORY_COLORS[site.category] ?? CATEGORY_COLORS['文化遗产']
 
@@ -85,21 +82,8 @@ export function HeritageCard({ site, checkinSet, onClick }: HeritageCardProps) {
             {site.name}
           </h3>
           {/* 双人头像放在标题右侧，独立空间 */}
-          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 -mt-0.5">
-            {(['zuo', 'huang'] as const).map((uid) => {
-              const cfg = USER_CONFIGS[uid]
-              const checked = uid === 'zuo' ? checkedA : checkedB
-              return (
-                <Avatar
-                  key={uid}
-                  user={cfg}
-                  size={22}
-                  active={checked}
-                  dimWhenInactive
-                  title={`${cfg.label}：${checked ? '已打卡' : '未打卡'}`}
-                />
-              )
-            })}
+          <div className="-mt-0.5">
+            <CheckinAvatars checkinSet={checkinSet} itemId={site.id} size={22} gapClassName="gap-0.5 sm:gap-1" />
           </div>
         </div>
 

@@ -48,7 +48,7 @@ export function Layout({ children, hideTabs = false }: LayoutProps) {
 
         {!hideTabs && (
           <nav
-            className="max-w-5xl mx-auto px-4 flex items-center gap-1 border-t"
+            className="max-w-5xl mx-auto px-4 hidden sm:flex items-center gap-1 border-t"
             style={{ borderColor: 'var(--color-border)' }}
           >
             {TABS.map((t) => (
@@ -77,8 +77,39 @@ export function Layout({ children, hideTabs = false }: LayoutProps) {
       </header>
 
       {/* Content */}
-      {children}
+      <div className={!hideTabs ? 'pb-20 sm:pb-0' : undefined}>{children}</div>
+      {!hideTabs && <MobileTabBar />}
     </div>
+  )
+}
+
+function MobileTabBar() {
+  return (
+    <nav
+      className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t"
+      style={{
+        backgroundColor: 'var(--color-surface)',
+        borderColor: 'var(--color-border)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
+      <div className="grid grid-cols-4 max-w-5xl mx-auto">
+        {TABS.map((tab) => (
+          <NavLink
+            key={tab.to}
+            to={tab.to}
+            end={tab.exact}
+            className="min-w-0 px-1 py-2 text-center text-[11px] leading-tight"
+            style={({ isActive }) => ({
+              color: isActive ? 'var(--color-vermilion)' : 'var(--color-mist)',
+              fontWeight: isActive ? 700 : 500,
+            })}
+          >
+            <span className="block truncate">{tab.label}</span>
+          </NavLink>
+        ))}
+      </div>
+    </nav>
   )
 }
 

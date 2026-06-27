@@ -1,7 +1,6 @@
 import type { GuobaoSite } from '../data/guobao'
-import { USER_CONFIGS } from '../contexts/IdentityContext'
 import type { GuobaoCheckinSet } from '../hooks/useGuobaoCheckins'
-import { Avatar } from './Avatar'
+import { CheckinAvatars } from './CheckinAvatars'
 
 interface GuobaoCardProps {
   site: GuobaoSite
@@ -18,8 +17,6 @@ const CATEGORY_COLORS: Record<string, { bg: string; fg: string }> = {
 }
 
 export function GuobaoCard({ site, checkinSet, onClick }: GuobaoCardProps) {
-  const checkedA = checkinSet.has(`zuo:${site.id}`)
-  const checkedB = checkinSet.has(`huang:${site.id}`)
   const catColor = CATEGORY_COLORS[site.category] ?? CATEGORY_COLORS['古建筑']
 
   return (
@@ -40,22 +37,7 @@ export function GuobaoCard({ site, checkinSet, onClick }: GuobaoCardProps) {
         >
           {site.name}
         </h3>
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          {(['zuo', 'huang'] as const).map((uid) => {
-            const cfg = USER_CONFIGS[uid]
-            const checked = uid === 'zuo' ? checkedA : checkedB
-            return (
-              <Avatar
-                key={uid}
-                user={cfg}
-                size={20}
-                active={checked}
-                dimWhenInactive
-                title={`${cfg.label}：${checked ? '已打卡' : '未打卡'}`}
-              />
-            )
-          })}
-        </div>
+        <CheckinAvatars checkinSet={checkinSet} itemId={site.id} size={20} />
       </div>
 
       {/* Tags */}

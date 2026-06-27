@@ -1,4 +1,3 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   fetchHeritageCheckins,
   addHeritageCheckin,
@@ -6,89 +5,45 @@ import {
   type HeritageCheckin,
 } from '../lib/heritageQueries'
 import type { UserId } from '../contexts/IdentityContext'
-import { celebrateCheckin } from '../utils/celebrate'
+import { CHECKIN_RESOURCES } from '../lib/checkinResources'
+import {
+  useCheckinRows,
+  useCheckinSetForResource,
+  useIsResourceChecked,
+  useToggleCheckinResource,
+  type CheckinResourceHookOptions,
+  type CheckinSet,
+} from './useCheckinResource'
 
-export const HERITAGE_CHECKINS_KEY = ['heritage_checkins'] as const
+export const HERITAGE_CHECKINS_KEY = [CHECKIN_RESOURCES.heritage.queryKey] as const
 
-export type HeritageCheckinSet = Set<string> // `${userId}:${siteId}`
+export type HeritageCheckinSet = CheckinSet
 
-function toHeritageCheckinSet(checkins: HeritageCheckin[]): HeritageCheckinSet {
-  return new Set(checkins.map((c) => `${c.user_id}:${c.site_id}`))
+const heritageCheckinOptions: CheckinResourceHookOptions<HeritageCheckin, string> = {
+  queryKey: HERITAGE_CHECKINS_KEY,
+  idColumn: CHECKIN_RESOURCES.heritage.idColumn,
+  fetchRows: fetchHeritageCheckins,
+  addRow: addHeritageCheckin,
+  removeRow: removeHeritageCheckin,
+  makeOptimisticRow: (userId, siteId) => ({
+    user_id: userId,
+    site_id: siteId,
+    checked_at: new Date().toISOString(),
+  }),
 }
 
 export function useHeritageCheckins() {
-  return useQuery({
-    queryKey: HERITAGE_CHECKINS_KEY,
-    queryFn: fetchHeritageCheckins,
-    staleTime: 5 * 60_000,
-    gcTime: 30 * 60_000,
-  })
+  return useCheckinRows(heritageCheckinOptions)
 }
 
 export function useHeritageCheckinSet() {
-  const { data } = useHeritageCheckins()
-  return toHeritageCheckinSet(data ?? [])
+  return useCheckinSetForResource(heritageCheckinOptions)
 }
 
 export function useIsHeritageChecked(userId: UserId | null, siteId: string) {
-  const set = useHeritageCheckinSet()
-  if (!userId) return false
-  return set.has(`${userId}:${siteId}`)
+  return useIsResourceChecked(heritageCheckinOptions, userId, siteId)
 }
 
 export function useToggleHeritageCheckin() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      siteId,
-      checked,
-    }: {
-      userId: UserId
-      siteId: string
-      checked: boolean
-    }) => {
-      if (checked) {
-        await removeHeritageCheckin(userId, siteId)
-      } else {
-        await addHeritageCheckin(userId, siteId)
-      }
-    },
-
-    onMutate: async ({ userId, siteId, checked }) => {
-      await queryClient.cancelQueries({ queryKey: HERITAGE_CHECKINS_KEY })
-      const previous = queryClient.getQueryData<HeritageCheckin[]>(HERITAGE_CHECKINS_KEY) ?? []
-
-      let updated: HeritageCheckin[]
-      if (checked) {
-        updated = previous.filter(
-          (c) => !(c.user_id === userId && c.site_id === siteId)
-        )
-      } else {
-        try {
-          celebrateCheckin(userId)
-        } catch { /* ignore */ }
-        const newCheckin: HeritageCheckin = {
-          user_id: userId,
-          site_id: siteId,
-          checked_at: new Date().toISOString(),
-        }
-        updated = [newCheckin, ...previous]
-      }
-
-      queryClient.setQueryData<HeritageCheckin[]>(HERITAGE_CHECKINS_KEY, updated)
-      return { previous }
-    },
-
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.previous) {
-        queryClient.setQueryData<HeritageCheckin[]>(HERITAGE_CHECKINS_KEY, ctx.previous)
-      }
-    },
-
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: HERITAGE_CHECKINS_KEY })
-    },
-  })
+  return useToggleCheckinResource(heritageCheckinOptions)
 }

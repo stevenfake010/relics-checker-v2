@@ -1,11 +1,14 @@
 import { useState, useMemo } from 'react'
 import { HERITAGE_SITES, type HeritageSite, type HeritageCategory } from '../data/heritage'
-import { useHeritageCheckinSet } from '../hooks/useHeritageCheckins'
+import { useHeritageCheckins, useHeritageCheckinSet } from '../hooks/useHeritageCheckins'
+import { usePersistedState } from '../hooks/usePersistedState'
 import { HeritageCard } from '../components/HeritageCard'
 import { HeritageModal } from '../components/HeritageModal'
 import { Layout } from '../components/Layout'
 import { USER_CONFIGS } from '../contexts/IdentityContext'
 import { Avatar } from '../components/Avatar'
+import { Chip, ToggleChip } from '../components/FilterControls'
+import { QueryState } from '../components/QueryState'
 
 type CatFilter = 'all' | HeritageCategory
 type SortMode = 'year-desc' | 'year-asc' | 'province'
@@ -15,15 +18,16 @@ const CATEGORIES: HeritageCategory[] = ['文化遗产', '自然遗产', '混合�
 const TOTAL = HERITAGE_SITES.length
 
 export function Heritage() {
+  const checkinsQuery = useHeritageCheckins()
   const checkinSet = useHeritageCheckinSet()
   const [selected, setSelected] = useState<HeritageSite | null>(null)
-  const [search, setSearch] = useState('')
-  const [cat, setCat] = useState<CatFilter>('all')
-  const [province, setProvince] = useState<string>('')
-  const [checkedByA, setCheckedByA] = useState<boolean | null>(null) // zuo/佑
-  const [checkedByB, setCheckedByB] = useState<boolean | null>(null) // huang/宝
-  const [sort, setSort] = useState<SortMode>('year-desc')
-  const [provinceExpanded, setProvinceExpanded] = useState(false)
+  const [search, setSearch] = usePersistedState('filters:heritage:search', '')
+  const [cat, setCat] = usePersistedState<CatFilter>('filters:heritage:cat', 'all')
+  const [province, setProvince] = usePersistedState<string>('filters:heritage:province', '')
+  const [checkedByA, setCheckedByA] = usePersistedState<boolean | null>('filters:heritage:zuo', null)
+  const [checkedByB, setCheckedByB] = usePersistedState<boolean | null>('filters:heritage:huang', null)
+  const [sort, setSort] = usePersistedState<SortMode>('filters:heritage:sort', 'year-desc')
+  const [provinceExpanded, setProvinceExpanded] = usePersistedState('filters:heritage:provinceExpanded', false)
 
   const allProvinces = useMemo(
     () => Array.from(new Set(HERITAGE_SITES.map((s) => s.province))).sort(),
@@ -102,6 +106,23 @@ export function Heritage() {
   const displayProvinces = provinceExpanded
     ? provinceProgress
     : provinceProgress.slice(0, INITIAL_PROVINCE_COUNT)
+
+  if (!checkinsQuery.data && (checkinsQuery.isPending || checkinsQuery.isError)) {
+    return (
+      <Layout>
+        <div className="max-w-5xl mx-auto px-4 py-4">
+          <QueryState
+            isLoading={checkinsQuery.isPending}
+            isError={checkinsQuery.isError}
+            error={checkinsQuery.error}
+            onRetry={() => {
+              void checkinsQuery.refetch()
+            }}
+          />
+        </div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
@@ -268,8 +289,8 @@ export function Heritage() {
               {/* Checkin status filters */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs" style={{ color: 'var(--color-mist)' }}>打卡：</span>
-                <ToggleChip label="佑" value={checkedByA} onChange={setCheckedByA} />
-                <ToggleChip label="宝" value={checkedByB} onChange={setCheckedByB} />
+                <ToggleChip label="佑" value={checkedByA} onChange={setCheckedByA} checkedLabel="已访问" uncheckedLabel="未访问" />
+                <ToggleChip label="宝" value={checkedByB} onChange={setCheckedByB} checkedLabel="已访问" uncheckedLabel="未访问" />
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
@@ -317,62 +338,5 @@ export function Heritage() {
 
       <HeritageModal site={selected} onClose={() => setSelected(null)} />
     </Layout>
-  )
-}
-
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-2 py-1 rounded text-xs transition-all"
-      style={{
-        backgroundColor: active ? 'var(--color-vermilion)' : 'var(--color-surface-alt)',
-        color: active ? '#fff' : 'var(--color-ink)',
-        border: `1px solid ${active ? 'var(--color-vermilion)' : 'var(--color-border)'}`,
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
-function ToggleChip({
-  label,
-  value,
-  onChange,
-}: {
-  label: string
-  value: boolean | null
-  onChange: (v: boolean | null) => void
-}) {
-  const cycle = () => {
-    if (value === null) onChange(true)
-    else if (value === true) onChange(false)
-    else onChange(null)
-  }
-
-  const display = value === null ? `${label}：全部` : value ? `${label}：已访问` : `${label}：未访问`
-  const color = value === null ? 'var(--color-mist)' : value ? 'var(--color-jade)' : 'var(--color-vermilion)'
-
-  return (
-    <button
-      onClick={cycle}
-      className="text-xs px-2 py-1 rounded border transition-all"
-      style={{
-        borderColor: color,
-        color,
-        backgroundColor: 'var(--color-surface)',
-      }}
-    >
-      {display}
-    </button>
   )
 }

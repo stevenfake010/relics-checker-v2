@@ -1,11 +1,14 @@
 import { useState, useMemo } from 'react'
 import { GUOBAO_SITES, GUOBAO_CATEGORIES, type GuobaoSite, type GuobaoCategory } from '../data/guobao'
-import { useGuobaoCheckinSet } from '../hooks/useGuobaoCheckins'
+import { useGuobaoCheckins, useGuobaoCheckinSet } from '../hooks/useGuobaoCheckins'
+import { usePersistedState } from '../hooks/usePersistedState'
 import { GuobaoCard } from '../components/GuobaoCard'
 import { GuobaoModal } from '../components/GuobaoModal'
 import { Layout } from '../components/Layout'
 import { USER_CONFIGS } from '../contexts/IdentityContext'
 import { Avatar } from '../components/Avatar'
+import { Chip, ToggleChip } from '../components/FilterControls'
+import { QueryState } from '../components/QueryState'
 
 type CatFilter = 'all' | GuobaoCategory
 type BatchFilter = 'all' | 1 | 2
@@ -13,14 +16,15 @@ type BatchFilter = 'all' | 1 | 2
 const TOTAL = GUOBAO_SITES.length
 
 export function Guobao() {
+  const checkinsQuery = useGuobaoCheckins()
   const checkinSet = useGuobaoCheckinSet()
   const [selected, setSelected] = useState<GuobaoSite | null>(null)
-  const [search, setSearch] = useState('')
-  const [cat, setCat] = useState<CatFilter>('all')
-  const [batch, setBatch] = useState<BatchFilter>('all')
-  const [province, setProvince] = useState('')
-  const [checkedByA, setCheckedByA] = useState<boolean | null>(null)
-  const [checkedByB, setCheckedByB] = useState<boolean | null>(null)
+  const [search, setSearch] = usePersistedState('filters:guobao:search', '')
+  const [cat, setCat] = usePersistedState<CatFilter>('filters:guobao:cat', 'all')
+  const [batch, setBatch] = usePersistedState<BatchFilter>('filters:guobao:batch', 'all')
+  const [province, setProvince] = usePersistedState('filters:guobao:province', '')
+  const [checkedByA, setCheckedByA] = usePersistedState<boolean | null>('filters:guobao:zuo', null)
+  const [checkedByB, setCheckedByB] = usePersistedState<boolean | null>('filters:guobao:huang', null)
 
   const allProvinces = useMemo(
     () => Array.from(new Set(GUOBAO_SITES.map((s) => s.province))).sort(),
@@ -83,11 +87,28 @@ export function Guobao() {
       .sort((a, b) => b.pending - a.pending || b.total - a.total)
   }, [checkinSet])
 
-  const [provinceExpanded, setProvinceExpanded] = useState(false)
+  const [provinceExpanded, setProvinceExpanded] = usePersistedState('filters:guobao:provinceExpanded', false)
   const INITIAL_PROVINCE_COUNT = 6
   const displayProvinces = provinceExpanded
     ? provinceProgress
     : provinceProgress.slice(0, INITIAL_PROVINCE_COUNT)
+
+  if (!checkinsQuery.data && (checkinsQuery.isPending || checkinsQuery.isError)) {
+    return (
+      <Layout>
+        <div className="max-w-5xl mx-auto px-4 py-4">
+          <QueryState
+            isLoading={checkinsQuery.isPending}
+            isError={checkinsQuery.isError}
+            error={checkinsQuery.error}
+            onRetry={() => {
+              void checkinsQuery.refetch()
+            }}
+          />
+        </div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
@@ -237,37 +258,5 @@ export function Guobao() {
 
       <GuobaoModal site={selected} onClose={() => setSelected(null)} />
     </Layout>
-  )
-}
-
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-2 py-1 rounded text-xs transition-all"
-      style={{
-        backgroundColor: active ? 'var(--color-vermilion)' : 'var(--color-surface-alt)',
-        color: active ? '#fff' : 'var(--color-ink)',
-        border: `1px solid ${active ? 'var(--color-vermilion)' : 'var(--color-border)'}`,
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
-function ToggleChip({ label, value, onChange }: { label: string; value: boolean | null; onChange: (v: boolean | null) => void }) {
-  const cycle = () => {
-    if (value === null) onChange(true)
-    else if (value === true) onChange(false)
-    else onChange(null)
-  }
-  const display = value === null ? `${label}：全部` : value ? `${label}：已打卡` : `${label}：未打卡`
-  const color = value === null ? 'var(--color-mist)' : value ? 'var(--color-jade)' : 'var(--color-vermilion)'
-  return (
-    <button onClick={cycle} className="text-xs px-2 py-1 rounded border transition-all"
-      style={{ borderColor: color, color, backgroundColor: 'var(--color-surface)' }}>
-      {display}
-    </button>
   )
 }
