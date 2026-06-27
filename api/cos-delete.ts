@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import COS from 'cos-js-sdk-v5'
+import crypto from 'crypto'
 import { applyCors } from './_lib/cors.js'
 import { getBearerUser, getRequiredEnv, type UserId, ServerConfigError } from './_lib/auth.js'
 
@@ -43,18 +43,40 @@ function isMissingObjectError(err: unknown): boolean {
   return maybeStatus.statusCode === 404 || maybeStatus.code === 'NoSuchKey'
 }
 
-function deleteObject(key: string): Promise<void> {
-  const cos = new COS({
-    SecretId: getRequiredEnv('COS_SECRET_ID'),
-    SecretKey: getRequiredEnv('COS_SECRET_KEY'),
-  })
+function generateDeleteSignedUrl(key: string): string {
+  const secretId = getRequiredEnv('COS_SECRET_ID')
+  const secretKey = getRequiredEnv('COS_SECRET_KEY')
+  const now = Math.floor(Date.now() / 1000)
+  const exp = now + 300
+  const keyTime = `${now};${exp}`
 
-  return new Promise((resolve, reject) => {
-    cos.deleteObject({ Bucket: BUCKET, Region: REGION, Key: key }, (err) => {
-      if (err) reject(err)
-      else resolve()
-    })
-  })
+  const signKey = crypto.createHmac('sha1', secretKey).update(keyTime).digest('hex')
+  const httpMethod = 'delete'
+  const httpUri = `/${key}`
+  const httpParameters = ''
+  const httpHeaders = ''
+  const httpString = `${httpMethod}\n${httpUri}\n${httpParameters}\n${httpHeaders}\n`
+  const sha1HttpString = crypto.createHash('sha1').update(httpString).digest('hex')
+  const stringToSign = `sha1\n${keyTime}\n${sha1HttpString}\n`
+  const signature = crypto.createHmac('sha1', signKey).update(stringToSign).digest('hex')
+
+  const authorization = [
+    'q-sign-algorithm=sha1',
+    `q-ak=${secretId}`,
+    `q-sign-time=${keyTime}`,
+    `q-key-time=${keyTime}`,
+    'q-header-list=',
+    'q-url-param-list=',
+    `q-signature=${signature}`,
+  ].join('&')
+
+  return `${COS_ORIGIN}${encodeURI(key)}?${authorization}`
+}
+
+async function deleteObject(key: string): Promise<void> {
+  const resp = await fetch(generateDeleteSignedUrl(key), { method: 'DELETE' })
+  if (resp.ok || resp.status === 404) return
+  throw new Error(`COS delete failed: ${resp.status}`)
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
