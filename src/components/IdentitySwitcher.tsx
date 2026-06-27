@@ -1,8 +1,14 @@
 import { USER_CONFIGS, useIdentity } from '../contexts/IdentityContext'
+import { clearAuthToken } from '../lib/auth'
 import { Avatar } from './Avatar'
 
 export function IdentitySwitcher() {
-  const { currentUser, setCurrentUser } = useIdentity()
+  const { currentUser, clearUser } = useIdentity()
+
+  const handleSwitch = () => {
+    clearAuthToken()
+    clearUser()
+  }
 
   return (
     <div className="flex items-center gap-2">
@@ -11,7 +17,9 @@ export function IdentitySwitcher() {
         return (
           <button
             key={cfg.id}
-            onClick={() => setCurrentUser(cfg.id)}
+            onClick={() => {
+              if (!active) handleSwitch()
+            }}
             title={`切换到${cfg.label}`}
             className="flex items-center gap-1.5 pl-1 pr-3 py-0.5 rounded-full text-sm font-medium transition-all"
             style={{

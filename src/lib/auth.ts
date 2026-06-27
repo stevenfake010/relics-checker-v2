@@ -53,6 +53,12 @@ export function hasValidToken(): boolean {
   return payload.exp > Date.now()
 }
 
+export function hasValidTokenForUser(userId: string): boolean {
+  const payload = decodeTokenPayload(getAuthToken())
+  if (!payload) return false
+  return payload.exp > Date.now() && payload.userId === userId
+}
+
 /** The authenticated userId from the token, or null. */
 export function getAuthedUserId(): string | null {
   const payload = decodeTokenPayload(getAuthToken())
