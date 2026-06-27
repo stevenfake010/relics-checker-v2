@@ -19,9 +19,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-
-    "types": ["vitest/globals"]
+    "erasableSyntaxOnly": true
   },
   "include": ["src"]
 }

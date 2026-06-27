@@ -18,13 +18,41 @@ export function useRealtime() {
   const queryClient = useQueryClient()
 
   useEffect(() => {
+    let intervalId: number | null = null
+
     const refreshCheckins = () => {
       for (const queryKey of CHECKIN_QUERY_KEYS) {
         queryClient.refetchQueries({ queryKey, type: 'active' })
       }
     }
 
-    const intervalId = window.setInterval(refreshCheckins, REFRESH_INTERVAL_MS)
-    return () => window.clearInterval(intervalId)
+    const stop = () => {
+      if (intervalId !== null) {
+        window.clearInterval(intervalId)
+        intervalId = null
+      }
+    }
+
+    const start = () => {
+      if (document.visibilityState !== 'visible' || intervalId !== null) return
+      intervalId = window.setInterval(refreshCheckins, REFRESH_INTERVAL_MS)
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshCheckins()
+        start()
+      } else {
+        stop()
+      }
+    }
+
+    start()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [queryClient])
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 
 export type UserId = 'zuo' | 'huang'
 
@@ -47,12 +47,6 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY)
     setCurrentUserState(null)
   }
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(STORAGE_KEY, currentUser)
-    }
-  }, [currentUser])
 
   return (
     <IdentityContext.Provider value={{ currentUser, setCurrentUser, clearUser }}>

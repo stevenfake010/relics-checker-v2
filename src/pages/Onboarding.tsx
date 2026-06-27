@@ -1,7 +1,14 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type MutableRefObject } from 'react'
 import { type UserId, USER_CONFIGS, useIdentity } from '../contexts/IdentityContext'
 import { setAuthToken } from '../lib/auth'
 import { Avatar } from '../components/Avatar'
+
+function clearTimer(timerRef: MutableRefObject<number | null>) {
+  if (timerRef.current !== null) {
+    window.clearTimeout(timerRef.current)
+    timerRef.current = null
+  }
+}
 
 export function Onboarding() {
   const { setCurrentUser } = useIdentity()
@@ -11,17 +18,43 @@ export function Onboarding() {
   const [shaking, setShaking] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const focusTimerRef = useRef<number | null>(null)
+  const shakeTimerRef = useRef<number | null>(null)
+  const errorTimerRef = useRef<number | null>(null)
+
+  const clearFeedbackTimers = () => {
+    clearTimer(shakeTimerRef)
+    clearTimer(errorTimerRef)
+  }
+
+  const showErrorFeedback = () => {
+    clearFeedbackTimers()
+    setError(true)
+    setShaking(true)
+    shakeTimerRef.current = window.setTimeout(() => setShaking(false), 500)
+    errorTimerRef.current = window.setTimeout(() => setError(false), 2000)
+  }
 
   useEffect(() => {
+    clearTimer(focusTimerRef)
     if (selectedUser) {
-      setTimeout(() => inputRef.current?.focus(), 100)
+      focusTimerRef.current = window.setTimeout(() => inputRef.current?.focus(), 100)
     }
+    return () => clearTimer(focusTimerRef)
   }, [selectedUser])
 
+  useEffect(() => () => {
+    clearTimer(focusTimerRef)
+    clearTimer(shakeTimerRef)
+    clearTimer(errorTimerRef)
+  }, [])
+
   const handleSelect = (id: UserId) => {
+    clearFeedbackTimers()
     setSelectedUser(id)
     setPasscode('')
     setError(false)
+    setShaking(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,25 +77,21 @@ export function Onboarding() {
         setAuthToken(data.token)
         setCurrentUser(selectedUser)
       } else {
-        setError(true)
-        setShaking(true)
-        setTimeout(() => setShaking(false), 500)
-        setTimeout(() => setError(false), 2000)
+        showErrorFeedback()
       }
     } catch {
-      setError(true)
-      setShaking(true)
-      setTimeout(() => setShaking(false), 500)
-      setTimeout(() => setError(false), 2000)
+      showErrorFeedback()
     } finally {
       setVerifying(false)
     }
   }
 
   const handleBack = () => {
+    clearFeedbackTimers()
     setSelectedUser(null)
     setPasscode('')
     setError(false)
+    setShaking(false)
   }
 
   const selectedCfg = selectedUser ? USER_CONFIGS[selectedUser] : null

@@ -36,12 +36,30 @@ function generateCosSignedUrl(key: string, expireSeconds: number = 1800): string
     `q-signature=${signature}`,
   ].join('&')
 
-  return `https://${BUCKET}.cos.${REGION}.myqcloud.com/${encodeURI(key)}?${authorization}`
+  const encodedKey = key.split('/').map(encodeURIComponent).join('/')
+  return `https://${BUCKET}.cos.${REGION}.myqcloud.com/${encodedKey}?${authorization}`
 }
 
-function isAllowedKey(key: string): boolean {
-  if (key.length > 1024 || key.startsWith('/') || key.includes('..')) return false
-  return key.startsWith('heritage/') || key.startsWith('checkin/')
+function hasControlCharacter(value: string): boolean {
+  for (const char of value) {
+    const code = char.charCodeAt(0)
+    if (code <= 0x1F || code === 0x7F) return true
+  }
+  return false
+}
+
+export function isAllowedCosKey(key: string): boolean {
+  if (key.length > 1024 || key.startsWith('/')) return false
+  if (!key.startsWith('heritage/') && !key.startsWith('checkin/')) return false
+  if (hasControlCharacter(key)) return false
+  if (/[\\?#]/.test(key)) return false
+
+  const segments = key.split('/')
+  if (segments.some((segment) => segment.length === 0 || segment === '.' || segment.includes('..'))) {
+    return false
+  }
+
+  return true
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -52,10 +70,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Single key mode: GET /api/cos-sign?key=heritage/故宫.png
   if (req.method === 'GET') {
-    const key = req.query.key as string
-    if (!key) return res.status(400).json({ error: 'Missing key parameter' })
+    const key = Array.isArray(req.query.key) ? req.query.key[0] : req.query.key
+    if (typeof key !== 'string' || !key) return res.status(400).json({ error: 'Missing key parameter' })
 
-    if (!isAllowedKey(key)) {
+    if (!isAllowedCosKey(key)) {
       return res.status(403).json({ error: 'Forbidden path' })
     }
 
@@ -85,11 +103,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const urls: Record<string, string> = {}
     try {
+      const rejected: string[] = []
       for (const key of keys) {
-        if (typeof key !== 'string') continue
-        if (!isAllowedKey(key)) continue
+        if (typeof key !== 'string' || !isAllowedCosKey(key)) {
+          rejected.push(typeof key === 'string' ? key : String(key))
+          continue
+        }
         const expireSeconds = key.startsWith('heritage/') ? 86400 : 1800
         urls[key] = generateCosSignedUrl(key, expireSeconds)
+      }
+
+      if (rejected.length > 0) {
+        return res.status(400).json({ error: 'Invalid COS key in batch', rejected })
       }
     } catch (err) {
       if (err instanceof ServerConfigError) {

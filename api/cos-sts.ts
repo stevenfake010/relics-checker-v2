@@ -9,6 +9,21 @@ const config = {
   durationSeconds: 1800, // 30 min
 }
 
+export function resolveCosAppId(bucket: string): string {
+  const configured = process.env.COS_APP_ID?.trim()
+  if (configured) return configured
+
+  const match = bucket.match(/-(\d+)$/)
+  if (!match) {
+    throw new ServerConfigError('Missing required environment variable: COS_APP_ID')
+  }
+  return match[1]
+}
+
+function buildResource(appId: string, allowPrefix: string): string {
+  return `qcs::cos:${config.region}:uid/${appId}:${config.bucket}/${allowPrefix}`
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res, 'GET')) return
 
@@ -18,22 +33,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!user) return res.status(401).json({ error: 'Unauthorized' })
 
   try {
-    const appId = config.bucket.split('-').pop()
+    const appId = resolveCosAppId(config.bucket)
     const allowPrefix = `checkin/${user.userId}/*`
+    const resource = [buildResource(appId, allowPrefix)]
     const policy = {
       version: '2.0',
       statement: [
         {
-          action: ['name/cos:PutObject', 'name/cos:PostObject', 'name/cos:DeleteObject'],
+          action: ['name/cos:PutObject', 'name/cos:PostObject'],
           effect: 'allow',
-          resource: [
-            `qcs::cos:${config.region}:uid/${appId}:${config.bucket}/${allowPrefix}`,
-          ],
+          resource,
           condition: {
+            string_like: {
+              'cos:content-type': 'image/*',
+            },
             numeric_less_than_equal: {
               'cos:content-length': 10 * 1024 * 1024,
             },
           },
+        },
+        {
+          action: ['name/cos:DeleteObject'],
+          effect: 'allow',
+          resource,
         },
       ],
     }

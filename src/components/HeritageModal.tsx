@@ -25,7 +25,7 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
   const { currentUser } = useIdentity()
   const checkinSet = useHeritageCheckinSet()
   const { data: checkins } = useHeritageCheckins()
-  const { mutate: toggleCheckin } = useToggleHeritageCheckin()
+  const { mutate: toggleCheckin, isPending: toggling } = useToggleHeritageCheckin()
   const queryClient = useQueryClient()
   const [imgError, setImgError] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -65,7 +65,7 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
   const myPhoto = myCheckin?.photo_url
 
   const handleToggle = () => {
-    if (!currentUser) return
+    if (!currentUser || toggling) return
     const checked = checkinSet.has(`${currentUser}:${site.id}`)
     toggleCheckin({ userId: currentUser, itemId: site.id, checked })
   }
@@ -290,6 +290,7 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
                 <>
                   <button
                     onClick={handleToggle}
+                    disabled={toggling}
                     className="w-full py-3 rounded-lg font-medium text-sm transition-all"
                     style={{
                       backgroundColor: checkinSet.has(`${currentUser}:${site.id}`)
@@ -299,9 +300,13 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
                         ? 'var(--color-vermilion)'
                         : '#fff',
                       border: `1px solid var(--color-vermilion)`,
+                      cursor: toggling ? 'wait' : 'pointer',
+                      opacity: toggling ? 0.75 : 1,
                     }}
                   >
-                    {checkinSet.has(`${currentUser}:${site.id}`)
+                    {toggling
+                      ? '处理中...'
+                      : checkinSet.has(`${currentUser}:${site.id}`)
                       ? `✓ 已访问（${USER_CONFIGS[currentUser].label}）— 点击取消`
                       : `打卡 — ${USER_CONFIGS[currentUser].label}`}
                   </button>

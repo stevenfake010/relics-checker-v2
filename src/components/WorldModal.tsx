@@ -18,7 +18,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; fg: string }> = {
 export function WorldModal({ site, onClose }: WorldModalProps) {
   const { currentUser } = useIdentity()
   const checkinSet = useWorldCheckinSet()
-  const { mutate: toggleCheckin } = useToggleWorldCheckin()
+  const { mutate: toggleCheckin, isPending: toggling } = useToggleWorldCheckin()
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -35,7 +35,7 @@ export function WorldModal({ site, onClose }: WorldModalProps) {
   const catColor = CATEGORY_COLORS[site.category] ?? CATEGORY_COLORS['文化遗产']
 
   const handleToggle = () => {
-    if (!currentUser) return
+    if (!currentUser || toggling) return
     const checked = checkinSet.has(`${currentUser}:${site.id}`)
     toggleCheckin({ userId: currentUser, itemId: site.id, checked })
   }
@@ -120,14 +120,19 @@ export function WorldModal({ site, onClose }: WorldModalProps) {
           {currentUser ? (
             <button
               onClick={handleToggle}
+              disabled={toggling}
               className="w-full py-3 rounded-lg font-medium text-sm transition-all"
               style={{
                 backgroundColor: checkinSet.has(`${currentUser}:${site.id}`) ? 'var(--color-surface-alt)' : 'var(--color-vermilion)',
                 color: checkinSet.has(`${currentUser}:${site.id}`) ? 'var(--color-vermilion)' : '#fff',
                 border: '1px solid var(--color-vermilion)',
+                cursor: toggling ? 'wait' : 'pointer',
+                opacity: toggling ? 0.75 : 1,
               }}
             >
-              {checkinSet.has(`${currentUser}:${site.id}`)
+              {toggling
+                ? '处理中...'
+                : checkinSet.has(`${currentUser}:${site.id}`)
                 ? `✓ 已打卡（${USER_CONFIGS[currentUser].label}）— 点击取消`
                 : `打卡 — ${USER_CONFIGS[currentUser].label}`}
             </button>

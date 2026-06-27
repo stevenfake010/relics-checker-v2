@@ -19,7 +19,7 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
   const { currentUser } = useIdentity()
   const checkinSet = useCheckinSet()
   const { data: checkins } = useCheckins()
-  const { mutate: toggleCheckin } = useToggleCheckin()
+  const { mutate: toggleCheckin, isPending: toggling } = useToggleCheckin()
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -56,7 +56,7 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
   const myPhoto = myCheckin?.photo_url
 
   const handleToggle = () => {
-    if (!currentUser) return
+    if (!currentUser || toggling) return
     const checked = checkinSet.has(`${currentUser}:${relic.id}`)
     toggleCheckin({ userId: currentUser, itemId: relic.id, checked })
   }
@@ -272,6 +272,7 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
               <>
                 <button
                   onClick={handleToggle}
+                  disabled={toggling}
                   className="w-full py-3 rounded-lg font-medium text-sm transition-all"
                   style={{
                     backgroundColor: checkinSet.has(`${currentUser}:${relic.id}`)
@@ -281,9 +282,13 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
                       ? 'var(--color-vermilion)'
                       : '#fff',
                     border: `1px solid var(--color-vermilion)`,
+                    cursor: toggling ? 'wait' : 'pointer',
+                    opacity: toggling ? 0.75 : 1,
                   }}
                 >
-                  {checkinSet.has(`${currentUser}:${relic.id}`)
+                  {toggling
+                    ? '处理中...'
+                    : checkinSet.has(`${currentUser}:${relic.id}`)
                     ? `✓ 已打卡（${USER_CONFIGS[currentUser].label}）— 点击取消`
                     : `打卡 — ${USER_CONFIGS[currentUser].label}`}
                 </button>

@@ -30,6 +30,12 @@ export async function updateGuobaoCheckinPhoto(userId: UserId, siteId: string, p
 }
 
 export async function deleteGuobaoCheckinPhoto(userId: UserId, siteId: string, photoUrl?: string): Promise<void> {
-  if (photoUrl) await deleteCheckinPhotoObject(photoUrl)
   await updatePhoto('guobao', userId, siteId, null)
+  if (photoUrl) {
+    try {
+      await deleteCheckinPhotoObject(photoUrl)
+    } catch (err) {
+      console.warn('Failed to delete COS photo object:', err)
+    }
+  }
 }

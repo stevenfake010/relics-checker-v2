@@ -26,7 +26,7 @@ export function GuobaoModal({ site, onClose }: GuobaoModalProps) {
   const { currentUser } = useIdentity()
   const checkinSet = useGuobaoCheckinSet()
   const { data: checkins } = useGuobaoCheckins()
-  const { mutate: toggleCheckin } = useToggleGuobaoCheckin()
+  const { mutate: toggleCheckin, isPending: toggling } = useToggleGuobaoCheckin()
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -61,7 +61,7 @@ export function GuobaoModal({ site, onClose }: GuobaoModalProps) {
   const myPhoto = myCheckin?.photo_url
 
   const handleToggle = () => {
-    if (!currentUser) return
+    if (!currentUser || toggling) return
     const checked = checkinSet.has(`${currentUser}:${site.id}`)
     toggleCheckin({ userId: currentUser, itemId: site.id, checked })
   }
@@ -224,14 +224,19 @@ export function GuobaoModal({ site, onClose }: GuobaoModalProps) {
               <>
                 <button
                   onClick={handleToggle}
+                  disabled={toggling}
                   className="w-full py-3 rounded-lg font-medium text-sm transition-all"
                   style={{
                     backgroundColor: checkinSet.has(`${currentUser}:${site.id}`) ? 'var(--color-surface-alt)' : 'var(--color-vermilion)',
                     color: checkinSet.has(`${currentUser}:${site.id}`) ? 'var(--color-vermilion)' : '#fff',
                     border: '1px solid var(--color-vermilion)',
+                    cursor: toggling ? 'wait' : 'pointer',
+                    opacity: toggling ? 0.75 : 1,
                   }}
                 >
-                  {checkinSet.has(`${currentUser}:${site.id}`)
+                  {toggling
+                    ? '处理中...'
+                    : checkinSet.has(`${currentUser}:${site.id}`)
                     ? `✓ 已打卡（${USER_CONFIGS[currentUser].label}）— 点击取消`
                     : `打卡 — ${USER_CONFIGS[currentUser].label}`}
                 </button>

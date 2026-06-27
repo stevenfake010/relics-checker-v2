@@ -26,8 +26,14 @@ export async function updateCheckinPhoto(userId: UserId, relicId: number, photoU
 
 // Delete photo from a relic checkin
 export async function deleteCheckinPhoto(userId: UserId, relicId: number, photoUrl?: string): Promise<void> {
-  if (photoUrl) await deleteCheckinPhotoObject(photoUrl)
   await updatePhoto('relics', userId, relicId, null)
+  if (photoUrl) {
+    try {
+      await deleteCheckinPhotoObject(photoUrl)
+    } catch (err) {
+      console.warn('Failed to delete COS photo object:', err)
+    }
+  }
 }
 
 // Remove a checkin

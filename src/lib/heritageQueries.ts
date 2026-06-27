@@ -26,8 +26,14 @@ export async function updateHeritageCheckinPhoto(userId: UserId, siteId: string,
 }
 
 export async function deleteHeritageCheckinPhoto(userId: UserId, siteId: string, photoUrl?: string): Promise<void> {
-  if (photoUrl) await deleteCheckinPhotoObject(photoUrl)
   await updatePhoto('heritage', userId, siteId, null)
+  if (photoUrl) {
+    try {
+      await deleteCheckinPhotoObject(photoUrl)
+    } catch (err) {
+      console.warn('Failed to delete COS photo object:', err)
+    }
+  }
 }
 
 export async function removeHeritageCheckin(userId: UserId, siteId: string): Promise<void> {

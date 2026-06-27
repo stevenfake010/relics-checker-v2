@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getAuthToken } from '../lib/auth'
+import { CLIENT_COS_ORIGIN } from '../lib/cosConfig'
 
 const signedUrlCache = new Map<string, { url: string; expiresAt: number }>()
 
@@ -68,9 +69,8 @@ export async function fetchSignedUrls(keys: string[]): Promise<Record<string, st
 
 // Extract COS key from a full URL or return as-is if already a key
 export function extractCosKey(url: string): string | null {
-  const cosPrefix = 'https://heritage-1420709282.cos.ap-shanghai.myqcloud.com/'
-  if (url.startsWith(cosPrefix)) {
-    return decodeURIComponent(url.slice(cosPrefix.length))
+  if (url.startsWith(CLIENT_COS_ORIGIN)) {
+    return decodeURIComponent(url.slice(CLIENT_COS_ORIGIN.length).split('?')[0])
   }
   if (url.startsWith('heritage/') || url.startsWith('checkin/')) {
     return url
@@ -98,7 +98,10 @@ export function useSignedUrl(urlOrKey: string | null | undefined): string | null
     let cancelled = false
     fetchSignedUrl(key)
       .then((url) => { if (!cancelled) setSignedUrl(url) })
-      .catch(() => { if (!cancelled) setSignedUrl(urlOrKey) }) // fallback to original
+      .catch(() => {
+        signedUrlCache.delete(key)
+        if (!cancelled) setSignedUrl(null)
+      })
     return () => { cancelled = true }
   }, [urlOrKey])
 

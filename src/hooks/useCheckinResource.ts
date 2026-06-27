@@ -85,20 +85,21 @@ export function useToggleCheckinResource<Row extends CheckinRowBase, Id extends 
         ? previous.filter((row) => rowKey(row, options.idColumn) !== key)
         : [options.makeOptimisticRow(userId, itemId), ...previous]
 
-      if (!checked) {
-        try {
-          celebrateCheckin(userId)
-        } catch {
-          /* ignore */
-        }
-      }
-
       queryClient.setQueryData<Row[]>(options.queryKey, updated)
       return { previous }
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) {
         queryClient.setQueryData<Row[]>(options.queryKey, ctx.previous)
+      }
+    },
+    onSuccess: (_data, { userId, checked }) => {
+      if (!checked) {
+        try {
+          celebrateCheckin(userId)
+        } catch {
+          /* ignore */
+        }
       }
     },
     onSettled: () => {

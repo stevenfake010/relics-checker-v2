@@ -103,24 +103,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Invalid photoUrl' })
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from(config.table)
         .update({ photo_url: body.photoUrl })
         .eq('user_id', user.userId)
         .eq(config.idColumn, itemId)
+        .select(config.select)
 
       if (error) return res.status(500).json({ error: 'Failed to update photo' })
+      if (!data || data.length === 0) return res.status(404).json({ error: 'Checkin not found' })
       return res.status(200).json({ ok: true })
     }
 
     if (req.method === 'DELETE') {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from(config.table)
         .delete()
         .eq('user_id', user.userId)
         .eq(config.idColumn, itemId)
+        .select(config.select)
 
       if (error) return res.status(500).json({ error: 'Failed to remove checkin' })
+      if (!data || data.length === 0) return res.status(404).json({ error: 'Checkin not found' })
       return res.status(200).json({ ok: true })
     }
 
