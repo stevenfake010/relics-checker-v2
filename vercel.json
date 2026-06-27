@@ -1,4 +1,7 @@
 {
   "framework": "vite",
-  "regions": ["sfo1"]
+  "regions": ["sfo1"],
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
