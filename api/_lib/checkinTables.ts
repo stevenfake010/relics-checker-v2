@@ -41,9 +41,17 @@ const TABLES = {
 
 export type CheckinTableName = keyof typeof TABLES
 
+const TABLE_ALIASES: Record<string, CheckinTableName> = {
+  relics: 'checkins',
+  heritage: 'heritage_checkins',
+  world: 'world_checkins',
+  guobao: 'guobao_checkins',
+}
+
 export function getCheckinTable(value: unknown): CheckinTableConfig | null {
   if (typeof value !== 'string') return null
-  return TABLES[value as CheckinTableName] ?? null
+  const tableName = TABLE_ALIASES[value] ?? value
+  return TABLES[tableName as CheckinTableName] ?? null
 }
 
 export function normalizeItemId(config: CheckinTableConfig, value: unknown): number | string | null {

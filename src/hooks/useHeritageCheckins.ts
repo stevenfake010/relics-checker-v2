@@ -20,7 +20,8 @@ export function useHeritageCheckins() {
   return useQuery({
     queryKey: HERITAGE_CHECKINS_KEY,
     queryFn: fetchHeritageCheckins,
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   })
 }
 

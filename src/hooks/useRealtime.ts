@@ -5,7 +5,7 @@ import { HERITAGE_CHECKINS_KEY } from './useHeritageCheckins'
 import { WORLD_CHECKINS_KEY } from './useWorldCheckins'
 import { GUOBAO_CHECKINS_KEY } from './useGuobaoCheckins'
 
-const REFRESH_INTERVAL_MS = 30_000
+const REFRESH_INTERVAL_MS = 60_000
 
 const CHECKIN_QUERY_KEYS = [
   CHECKINS_KEY,
@@ -20,7 +20,7 @@ export function useRealtime() {
   useEffect(() => {
     const refreshCheckins = () => {
       for (const queryKey of CHECKIN_QUERY_KEYS) {
-        queryClient.invalidateQueries({ queryKey })
+        queryClient.refetchQueries({ queryKey, type: 'active' })
       }
     }
 
