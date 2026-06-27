@@ -13,7 +13,6 @@ const TABS = [
   { to: '/heritage', label: '🌏 中国世遗' },
   { to: '/world', label: '🌐 世界遗产' },
   { to: '/guobao', label: '🏯 国保' },
-  { to: '/stats', label: '📊 统计' },
 ]
 
 export function Layout({ children, hideTabs = false }: LayoutProps) {

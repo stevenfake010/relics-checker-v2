@@ -10,7 +10,6 @@ import { lazy, Suspense, type ReactNode } from 'react'
 const Home = lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })))
 const Heritage = lazy(() => import('./pages/Heritage').then((module) => ({ default: module.Heritage })))
 const World = lazy(() => import('./pages/World').then((module) => ({ default: module.World })))
-const Stats = lazy(() => import('./pages/Stats').then((module) => ({ default: module.Stats })))
 const Guobao = lazy(() => import('./pages/Guobao').then((module) => ({ default: module.Guobao })))
 
 const queryClient = new QueryClient({
@@ -81,14 +80,7 @@ function AppRoutes() {
               </AuthGuard>
             }
           />
-          <Route
-            path="/stats"
-            element={
-              <AuthGuard>
-                <Stats />
-              </AuthGuard>
-            }
-          />
+          <Route path="/stats" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
