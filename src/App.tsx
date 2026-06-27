@@ -4,13 +4,14 @@ import { IdentityProvider, useIdentity } from './contexts/IdentityContext'
 import { hasValidToken, clearAuthToken } from './lib/auth'
 import { ToastProvider } from './components/Toast'
 import { Onboarding } from './pages/Onboarding'
-import { Home } from './pages/Home'
-import { Heritage } from './pages/Heritage'
-import { World } from './pages/World'
-import { Stats } from './pages/Stats'
-import { Guobao } from './pages/Guobao'
 import { useRealtime } from './hooks/useRealtime'
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
+
+const Home = lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })))
+const Heritage = lazy(() => import('./pages/Heritage').then((module) => ({ default: module.Heritage })))
+const World = lazy(() => import('./pages/World').then((module) => ({ default: module.World })))
+const Stats = lazy(() => import('./pages/Stats').then((module) => ({ default: module.Stats })))
+const Guobao = lazy(() => import('./pages/Guobao').then((module) => ({ default: module.Guobao })))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,49 +48,51 @@ function AuthGuard({ children }: { children: ReactNode }) {
 function AppRoutes() {
   return (
     <RealtimeSetup>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <AuthGuard>
-              <Home />
-            </AuthGuard>
-          }
-        />
-        <Route
-          path="/heritage"
-          element={
-            <AuthGuard>
-              <Heritage />
-            </AuthGuard>
-          }
-        />
-        <Route
-          path="/world"
-          element={
-            <AuthGuard>
-              <World />
-            </AuthGuard>
-          }
-        />
-        <Route
-          path="/guobao"
-          element={
-            <AuthGuard>
-              <Guobao />
-            </AuthGuard>
-          }
-        />
-        <Route
-          path="/stats"
-          element={
-            <AuthGuard>
-              <Stats />
-            </AuthGuard>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<div className="min-h-screen" style={{ backgroundColor: 'var(--color-paper)' }} />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <AuthGuard>
+                <Home />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/heritage"
+            element={
+              <AuthGuard>
+                <Heritage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/world"
+            element={
+              <AuthGuard>
+                <World />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/guobao"
+            element={
+              <AuthGuard>
+                <Guobao />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/stats"
+            element={
+              <AuthGuard>
+                <Stats />
+              </AuthGuard>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </RealtimeSetup>
   )
 }

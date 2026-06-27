@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchCheckins, addCheckin, removeCheckin, type Checkin } from '../lib/queries'
-import { hasSupabase } from '../lib/supabase'
 import type { UserId } from '../contexts/IdentityContext'
 import { celebrateCheckin } from '../utils/celebrate'
 
@@ -17,7 +16,6 @@ export function useCheckins() {
   return useQuery({
     queryKey: CHECKINS_KEY,
     queryFn: fetchCheckins,
-    // Even without Supabase, we still call (returns [])
     staleTime: 30_000,
   })
 }
@@ -46,7 +44,6 @@ export function useToggleCheckin() {
       relicId: number
       checked: boolean
     }) => {
-      if (!hasSupabase) return // noop if no Supabase
       if (checked) {
         await removeCheckin(userId, relicId)
       } else {

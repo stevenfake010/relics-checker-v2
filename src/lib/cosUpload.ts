@@ -27,9 +27,11 @@ const BUCKET = 'heritage-1420709282'
 const REGION = 'ap-shanghai'
 
 function generateKey(siteId: string, userId: string, file: File): string {
-  const ext = file.name.split('.').pop() || 'jpg'
+  const rawExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const ext = /^[a-z0-9]+$/.test(rawExt) ? rawExt : 'jpg'
+  const safeSiteId = siteId.replace(/[^a-zA-Z0-9_-]/g, '_')
   const ts = Date.now()
-  return `checkin/${siteId}/${userId}_${ts}.${ext}`
+  return `checkin/${userId}/${safeSiteId}/${ts}.${ext}`
 }
 
 export async function uploadCheckinPhoto(
@@ -51,7 +53,7 @@ export async function uploadCheckinPhoto(
           if (onProgress) onProgress(Math.round(info.percent * 100))
         },
       },
-      (err, _data) => {
+      (err) => {
         if (err) {
           reject(err)
         } else {

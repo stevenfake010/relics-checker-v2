@@ -7,7 +7,7 @@ import { Avatar } from './Avatar'
 import { PhotoLightbox } from './PhotoLightbox'
 import { SignedImage } from './SignedImage'
 import { uploadCheckinPhoto } from '../lib/cosUpload'
-import { updateHeritageCheckinPhoto, deleteHeritageCheckinPhoto } from '../lib/heritageQueries'
+import { addHeritageCheckin, updateHeritageCheckinPhoto, deleteHeritageCheckinPhoto } from '../lib/heritageQueries'
 import { useQueryClient } from '@tanstack/react-query'
 
 interface HeritageModalProps {
@@ -93,12 +93,11 @@ export function HeritageModal({ site, onClose }: HeritageModalProps) {
     try {
       const url = await uploadCheckinPhoto(file, site.id, currentUser, setUploadProgress)
 
-      // If not checked in yet, do a checkin first
       if (!checkinSet.has(`${currentUser}:${site.id}`)) {
-        toggleCheckin({ userId: currentUser, siteId: site.id, checked: false })
+        await addHeritageCheckin(currentUser, site.id, url)
+      } else {
+        await updateHeritageCheckinPhoto(currentUser, site.id, url)
       }
-
-      await updateHeritageCheckinPhoto(currentUser, site.id, url)
       queryClient.invalidateQueries({ queryKey: HERITAGE_CHECKINS_KEY })
     } catch (err) {
       console.error('Upload failed:', err)

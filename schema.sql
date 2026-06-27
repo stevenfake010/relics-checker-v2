@@ -1,53 +1,80 @@
--- relics-checker-v2 Supabase Schema
--- Run this in your Supabase SQL editor
+-- relics-checker-v2 Supabase schema
+-- Run this in the Supabase SQL editor.
+--
+-- The browser no longer writes these tables directly. Reads and writes go
+-- through Vercel API routes using SUPABASE_SERVICE_ROLE_KEY, so anon users get
+-- no table policies here.
 
--- Enable realtime
--- (Supabase dashboard: Database > Replication > enable for checkins table)
-
--- Checkins table
 CREATE TABLE IF NOT EXISTS checkins (
   id         BIGSERIAL PRIMARY KEY,
-  user_id    TEXT        NOT NULL,   -- 'userA' | 'userB'
-  relic_id   INTEGER     NOT NULL,   -- 1..195
+  user_id    TEXT        NOT NULL CHECK (user_id IN ('zuo', 'huang')),
+  relic_id   INTEGER     NOT NULL CHECK (relic_id > 0),
   checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  photo_url  TEXT,
   UNIQUE (user_id, relic_id)
 );
 
--- Index for fast queries
+ALTER TABLE checkins ADD COLUMN IF NOT EXISTS photo_url TEXT;
 CREATE INDEX IF NOT EXISTS idx_checkins_user_id ON checkins (user_id);
 CREATE INDEX IF NOT EXISTS idx_checkins_relic_id ON checkins (relic_id);
-
--- Row-level security (optional - disable if you want open access)
 ALTER TABLE checkins ENABLE ROW LEVEL SECURITY;
 
--- Policy: anyone can read all checkins
-CREATE POLICY "checkins_select" ON checkins
-  FOR SELECT USING (true);
+DROP POLICY IF EXISTS "checkins_select" ON checkins;
+DROP POLICY IF EXISTS "checkins_insert" ON checkins;
+DROP POLICY IF EXISTS "checkins_delete" ON checkins;
+DROP POLICY IF EXISTS "checkins_update" ON checkins;
 
--- Policy: anyone can insert their own checkin
-CREATE POLICY "checkins_insert" ON checkins
-  FOR INSERT WITH CHECK (true);
+CREATE TABLE IF NOT EXISTS heritage_checkins (
+  id         BIGSERIAL PRIMARY KEY,
+  user_id    TEXT        NOT NULL CHECK (user_id IN ('zuo', 'huang')),
+  site_id    TEXT        NOT NULL,
+  checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  photo_url  TEXT,
+  UNIQUE (user_id, site_id)
+);
 
--- Policy: anyone can delete their own checkin
-CREATE POLICY "checkins_delete" ON checkins
-  FOR DELETE USING (true);
+ALTER TABLE heritage_checkins ADD COLUMN IF NOT EXISTS photo_url TEXT;
+CREATE INDEX IF NOT EXISTS idx_heritage_checkins_user_id ON heritage_checkins (user_id);
+CREATE INDEX IF NOT EXISTS idx_heritage_checkins_site_id ON heritage_checkins (site_id);
+ALTER TABLE heritage_checkins ENABLE ROW LEVEL SECURITY;
 
--- ============================================================
--- world_checkins: 世界遗产 Top100 打卡（无照片，site_id = UNESCO ID 字符串）
--- ============================================================
+DROP POLICY IF EXISTS "heritage_checkins_select" ON heritage_checkins;
+DROP POLICY IF EXISTS "heritage_checkins_insert" ON heritage_checkins;
+DROP POLICY IF EXISTS "heritage_checkins_delete" ON heritage_checkins;
+DROP POLICY IF EXISTS "heritage_checkins_update" ON heritage_checkins;
+
 CREATE TABLE IF NOT EXISTS world_checkins (
   id         BIGSERIAL PRIMARY KEY,
-  user_id    TEXT        NOT NULL,   -- 'zuo' | 'huang'
-  site_id    TEXT        NOT NULL,   -- UNESCO ID
+  user_id    TEXT        NOT NULL CHECK (user_id IN ('zuo', 'huang')),
+  site_id    TEXT        NOT NULL,
   checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, site_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_world_checkins_user_id ON world_checkins (user_id);
 CREATE INDEX IF NOT EXISTS idx_world_checkins_site_id ON world_checkins (site_id);
-
 ALTER TABLE world_checkins ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "world_checkins_select" ON world_checkins FOR SELECT USING (true);
-CREATE POLICY "world_checkins_insert" ON world_checkins FOR INSERT WITH CHECK (true);
-CREATE POLICY "world_checkins_delete" ON world_checkins FOR DELETE USING (true);
+DROP POLICY IF EXISTS "world_checkins_select" ON world_checkins;
+DROP POLICY IF EXISTS "world_checkins_insert" ON world_checkins;
+DROP POLICY IF EXISTS "world_checkins_delete" ON world_checkins;
+DROP POLICY IF EXISTS "world_checkins_update" ON world_checkins;
+
+CREATE TABLE IF NOT EXISTS guobao_checkins (
+  id         BIGSERIAL PRIMARY KEY,
+  user_id    TEXT        NOT NULL CHECK (user_id IN ('zuo', 'huang')),
+  site_id    TEXT        NOT NULL,
+  checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  photo_url  TEXT,
+  UNIQUE (user_id, site_id)
+);
+
+ALTER TABLE guobao_checkins ADD COLUMN IF NOT EXISTS photo_url TEXT;
+CREATE INDEX IF NOT EXISTS idx_guobao_checkins_user_id ON guobao_checkins (user_id);
+CREATE INDEX IF NOT EXISTS idx_guobao_checkins_site_id ON guobao_checkins (site_id);
+ALTER TABLE guobao_checkins ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "guobao_checkins_select" ON guobao_checkins;
+DROP POLICY IF EXISTS "guobao_checkins_insert" ON guobao_checkins;
+DROP POLICY IF EXISTS "guobao_checkins_delete" ON guobao_checkins;
+DROP POLICY IF EXISTS "guobao_checkins_update" ON guobao_checkins;

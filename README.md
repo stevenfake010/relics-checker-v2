@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# Relics Checker V2
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Private two-person cultural heritage check-in app built with Vite, React, Supabase, Tencent COS, and Vercel API routes.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 22.12.0 or newer
+- Supabase project with the schema from `schema.sql`
+- Tencent COS bucket for heritage and check-in photos
+- Vercel or a local dev setup that can run `/api/*` functions
 
-## React Compiler
+## Environment Variables
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Server/API:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+VERIFY_SECRET=long-random-token-signing-secret
+PASSCODE_ZUO=...
+PASSCODE_HUANG=...
+COS_SECRET_ID=...
+COS_SECRET_KEY=...
+COS_BUCKET=heritage-1420709282
+COS_REGION=ap-shanghai
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`VERIFY_SECRET` is required. The API intentionally has no fallback secret.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Data Access Model
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Browser code does not write Supabase tables directly.
+- Check-in reads/writes go through `/api/checkins`.
+- API routes validate the passcode-issued token and use `SUPABASE_SERVICE_ROLE_KEY`.
+- `schema.sql` enables RLS and removes anon table policies, so the public anon key cannot directly read, insert, update, or delete check-ins.
+- COS upload credentials are scoped to `checkin/{userId}/*`.
+
+## Setup
+
+```bash
+npm install
+npm run dev
+```
+
+Apply `schema.sql` in Supabase before using check-ins.
+
+## Checks
+
+```bash
+npm run lint
+npm run test:run
+npm run build
+npm audit --audit-level=high
 ```

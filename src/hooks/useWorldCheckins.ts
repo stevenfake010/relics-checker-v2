@@ -5,7 +5,6 @@ import {
   removeWorldCheckin,
   type WorldCheckin,
 } from '../lib/worldQueries'
-import { hasSupabase } from '../lib/supabase'
 import type { UserId } from '../contexts/IdentityContext'
 import { celebrateCheckin } from '../utils/celebrate'
 
@@ -43,7 +42,6 @@ export function useToggleWorldCheckin() {
       siteId: string
       checked: boolean
     }) => {
-      if (!hasSupabase) return
       if (checked) {
         await removeWorldCheckin(userId, siteId)
       } else {

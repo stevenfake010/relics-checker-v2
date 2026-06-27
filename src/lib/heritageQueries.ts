@@ -1,4 +1,5 @@
-import { supabase } from './supabase'
+import { deleteCheckin, fetchCheckinRows, saveCheckin, updateCheckinPhoto as updatePhoto } from './checkinApi'
+import type { UserId } from '../contexts/IdentityContext'
 
 export interface HeritageCheckin {
   user_id: string
@@ -8,66 +9,30 @@ export interface HeritageCheckin {
 }
 
 export async function fetchHeritageCheckins(): Promise<HeritageCheckin[]> {
-  if (!supabase) return []
-  const { data, error } = await supabase
-    .from('heritage_checkins')
-    .select('user_id, site_id, checked_at, photo_url')
-    .order('checked_at', { ascending: false })
-  if (error) {
+  try {
+    return await fetchCheckinRows<HeritageCheckin>('heritage')
+  } catch (error) {
     console.error('[heritageQueries] fetch error:', error)
     return []
   }
-  return (data as HeritageCheckin[]) ?? []
 }
 
-export async function addHeritageCheckin(userId: string, siteId: string, photoUrl?: string): Promise<HeritageCheckin | null> {
-  if (!supabase) return null
-  const row: Record<string, unknown> = { user_id: userId, site_id: siteId }
-  if (photoUrl) row.photo_url = photoUrl
-  const { data, error } = await supabase
-    .from('heritage_checkins')
-    .upsert(row as never, { onConflict: 'user_id,site_id' } as never)
-    .select('user_id, site_id, checked_at, photo_url')
-    .single()
-  if (error) {
-    console.error('[heritageQueries] add error:', error)
-    return null
-  }
-  return data as HeritageCheckin
+export async function addHeritageCheckin(
+  userId: UserId,
+  siteId: string,
+  photoUrl?: string
+): Promise<HeritageCheckin> {
+  return saveCheckin<HeritageCheckin>('heritage', userId, siteId, photoUrl)
 }
 
-export async function updateHeritageCheckinPhoto(userId: string, siteId: string, photoUrl: string): Promise<void> {
-  if (!supabase) return
-  const { error } = await supabase
-    .from('heritage_checkins')
-    .update({ photo_url: photoUrl } as never)
-    .eq('user_id', userId)
-    .eq('site_id', siteId)
-  if (error) {
-    console.error('[heritageQueries] update photo error:', error)
-  }
+export async function updateHeritageCheckinPhoto(userId: UserId, siteId: string, photoUrl: string): Promise<void> {
+  await updatePhoto('heritage', userId, siteId, photoUrl)
 }
 
-export async function deleteHeritageCheckinPhoto(userId: string, siteId: string): Promise<void> {
-  if (!supabase) return
-  const { error } = await supabase
-    .from('heritage_checkins')
-    .update({ photo_url: null } as never)
-    .eq('user_id', userId)
-    .eq('site_id', siteId)
-  if (error) {
-    console.error('[heritageQueries] delete photo error:', error)
-  }
+export async function deleteHeritageCheckinPhoto(userId: UserId, siteId: string): Promise<void> {
+  await updatePhoto('heritage', userId, siteId, null)
 }
 
-export async function removeHeritageCheckin(userId: string, siteId: string): Promise<void> {
-  if (!supabase) return
-  const { error } = await supabase
-    .from('heritage_checkins')
-    .delete()
-    .eq('user_id', userId)
-    .eq('site_id', siteId)
-  if (error) {
-    console.error('[heritageQueries] remove error:', error)
-  }
+export async function removeHeritageCheckin(userId: UserId, siteId: string): Promise<void> {
+  await deleteCheckin('heritage', userId, siteId)
 }

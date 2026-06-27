@@ -13,7 +13,6 @@ import { CityRanking } from '../components/CityRanking'
 import { RelicCard } from '../components/RelicCard'
 import { RelicModal } from '../components/RelicModal'
 import { Layout } from '../components/Layout'
-import { hasSupabase } from '../lib/supabase'
 import type { Relic } from '../data/types'
 
 export function Home() {
@@ -58,15 +57,6 @@ export function Home() {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto px-4 py-4">
-        {!hasSupabase && (
-          <div
-            className="mb-4 px-4 py-3 rounded-lg text-sm"
-            style={{ backgroundColor: '#FFF3CD', color: '#856404', border: '1px solid #FFD700' }}
-          >
-            ⚠️ 未配置 Supabase，打卡数据仅保存在本地内存（刷新后清空）。
-          </div>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           {/* Sidebar */}
           <aside className="lg:col-span-1 space-y-4">

@@ -5,7 +5,6 @@ import {
   removeHeritageCheckin,
   type HeritageCheckin,
 } from '../lib/heritageQueries'
-import { hasSupabase } from '../lib/supabase'
 import type { UserId } from '../contexts/IdentityContext'
 import { celebrateCheckin } from '../utils/celebrate'
 
@@ -49,7 +48,6 @@ export function useToggleHeritageCheckin() {
       siteId: string
       checked: boolean
     }) => {
-      if (!hasSupabase) return
       if (checked) {
         await removeHeritageCheckin(userId, siteId)
       } else {

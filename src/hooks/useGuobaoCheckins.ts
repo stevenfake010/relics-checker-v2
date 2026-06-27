@@ -5,7 +5,6 @@ import {
   removeGuobaoCheckin,
   type GuobaoCheckin,
 } from '../lib/guobaoQueries'
-import { hasSupabase } from '../lib/supabase'
 import type { UserId } from '../contexts/IdentityContext'
 import { celebrateCheckin } from '../utils/celebrate'
 
@@ -43,7 +42,6 @@ export function useToggleGuobaoCheckin() {
       siteId: string
       checked: boolean
     }) => {
-      if (!hasSupabase) return
       if (checked) {
         await removeGuobaoCheckin(userId, siteId)
       } else {

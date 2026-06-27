@@ -1,53 +1,30 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
 import { CHECKINS_KEY } from './useCheckins'
 import { HERITAGE_CHECKINS_KEY } from './useHeritageCheckins'
 import { WORLD_CHECKINS_KEY } from './useWorldCheckins'
+import { GUOBAO_CHECKINS_KEY } from './useGuobaoCheckins'
+
+const REFRESH_INTERVAL_MS = 30_000
+
+const CHECKIN_QUERY_KEYS = [
+  CHECKINS_KEY,
+  HERITAGE_CHECKINS_KEY,
+  WORLD_CHECKINS_KEY,
+  GUOBAO_CHECKINS_KEY,
+] as const
 
 export function useRealtime() {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    if (!supabase) return
-
-    const relicChannel = supabase
-      .channel('checkins-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'checkins' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: CHECKINS_KEY })
-        }
-      )
-      .subscribe()
-
-    const heritageChannel = supabase
-      .channel('heritage-checkins-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'heritage_checkins' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: HERITAGE_CHECKINS_KEY })
-        }
-      )
-      .subscribe()
-
-    const worldChannel = supabase
-      .channel('world-checkins-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'world_checkins' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: WORLD_CHECKINS_KEY })
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase?.removeChannel(relicChannel)
-      supabase?.removeChannel(heritageChannel)
-      supabase?.removeChannel(worldChannel)
+    const refreshCheckins = () => {
+      for (const queryKey of CHECKIN_QUERY_KEYS) {
+        queryClient.invalidateQueries({ queryKey })
+      }
     }
+
+    const intervalId = window.setInterval(refreshCheckins, REFRESH_INTERVAL_MS)
+    return () => window.clearInterval(intervalId)
   }, [queryClient])
 }

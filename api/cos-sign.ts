@@ -1,40 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import crypto from 'crypto'
+import { applyCors } from '../server/cors'
+import { getBearerUser, getRequiredEnv, ServerConfigError } from '../server/auth'
 
-const SECRET_ID = process.env.COS_SECRET_ID!
-const SECRET_KEY = process.env.COS_SECRET_KEY!
-const BUCKET = 'heritage-1420709282'
-const REGION = 'ap-shanghai'
-const VERIFY_SECRET = process.env.VERIFY_SECRET || 'relics-checker-v2-default-secret'
-
-const ALLOWED_ORIGINS = [
-  'https://ctecharena.top',
-  'https://www.ctecharena.top',
-  'http://localhost:5173',
-  'http://localhost:3000',
-]
-
-function verifyToken(token: string): { userId: string } | null {
-  try {
-    const [payloadB64, hmac] = token.split('.')
-    if (!payloadB64 || !hmac) return null
-    const payload = Buffer.from(payloadB64, 'base64').toString()
-    const expectedHmac = crypto.createHmac('sha256', VERIFY_SECRET).update(payload).digest('hex')
-    if (hmac !== expectedHmac) return null
-    const data = JSON.parse(payload)
-    if (data.exp < Date.now()) return null
-    return { userId: data.userId }
-  } catch {
-    return null
-  }
-}
+const BUCKET = process.env.COS_BUCKET || 'heritage-1420709282'
+const REGION = process.env.COS_REGION || 'ap-shanghai'
 
 function generateCosSignedUrl(key: string, expireSeconds: number = 1800): string {
+  const secretId = getRequiredEnv('COS_SECRET_ID')
+  const secretKey = getRequiredEnv('COS_SECRET_KEY')
   const now = Math.floor(Date.now() / 1000)
   const exp = now + expireSeconds
   const keyTime = `${now};${exp}`
 
-  const signKey = crypto.createHmac('sha1', SECRET_KEY).update(keyTime).digest('hex')
+  const signKey = crypto.createHmac('sha1', secretKey).update(keyTime).digest('hex')
 
   const httpMethod = 'get'
   const httpUri = `/${key}`
@@ -49,7 +28,7 @@ function generateCosSignedUrl(key: string, expireSeconds: number = 1800): string
 
   const authorization = [
     `q-sign-algorithm=sha1`,
-    `q-ak=${SECRET_ID}`,
+    `q-ak=${secretId}`,
     `q-sign-time=${keyTime}`,
     `q-key-time=${keyTime}`,
     `q-header-list=`,
@@ -60,37 +39,38 @@ function generateCosSignedUrl(key: string, expireSeconds: number = 1800): string
   return `https://${BUCKET}.cos.${REGION}.myqcloud.com/${encodeURI(key)}?${authorization}`
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const origin = req.headers.origin ?? ''
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  res.setHeader('Vary', 'Origin')
-  if (req.method === 'OPTIONS') return res.status(200).end()
+function isAllowedKey(key: string): boolean {
+  if (key.length > 1024 || key.startsWith('/') || key.includes('..')) return false
+  return key.startsWith('heritage/') || key.startsWith('checkin/')
+}
 
-  // Verify auth token
-  const authHeader = req.headers.authorization ?? ''
-  const token = authHeader.replace(/^Bearer\s+/i, '')
-  const user = verifyToken(token)
-  if (!user) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res, 'GET, POST')) return
+
+  const user = getBearerUser(req)
+  if (!user) return res.status(401).json({ error: 'Unauthorized' })
 
   // Single key mode: GET /api/cos-sign?key=heritage/故宫.png
   if (req.method === 'GET') {
     const key = req.query.key as string
     if (!key) return res.status(400).json({ error: 'Missing key parameter' })
 
-    // Only allow heritage/ and checkin/ paths
-    if (!key.startsWith('heritage/') && !key.startsWith('checkin/')) {
+    if (!isAllowedKey(key)) {
       return res.status(403).json({ error: 'Forbidden path' })
     }
 
-    const expireSeconds = key.startsWith('heritage/') ? 86400 : 1800 // 24h for heritage, 30min for checkin
-    const signedUrl = generateCosSignedUrl(key, expireSeconds)
-    res.setHeader('Cache-Control', `private, max-age=${Math.floor(expireSeconds * 0.8)}`)
-    return res.status(200).json({ url: signedUrl })
+    try {
+      const expireSeconds = key.startsWith('heritage/') ? 86400 : 1800 // 24h for heritage, 30min for checkin
+      const signedUrl = generateCosSignedUrl(key, expireSeconds)
+      res.setHeader('Cache-Control', `private, max-age=${Math.floor(expireSeconds * 0.8)}`)
+      return res.status(200).json({ url: signedUrl })
+    } catch (err) {
+      if (err instanceof ServerConfigError) {
+        return res.status(500).json({ error: 'Server is not configured' })
+      }
+      console.error('[cos-sign] sign error:', err)
+      return res.status(500).json({ error: 'Failed to sign URL' })
+    }
   }
 
   // Batch mode: POST /api/cos-sign with { keys: ["heritage/故宫.png", ...] }
@@ -104,11 +84,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const urls: Record<string, string> = {}
-    for (const key of keys) {
-      if (typeof key !== 'string') continue
-      if (!key.startsWith('heritage/') && !key.startsWith('checkin/')) continue
-      const expireSeconds = key.startsWith('heritage/') ? 86400 : 1800
-      urls[key] = generateCosSignedUrl(key, expireSeconds)
+    try {
+      for (const key of keys) {
+        if (typeof key !== 'string') continue
+        if (!isAllowedKey(key)) continue
+        const expireSeconds = key.startsWith('heritage/') ? 86400 : 1800
+        urls[key] = generateCosSignedUrl(key, expireSeconds)
+      }
+    } catch (err) {
+      if (err instanceof ServerConfigError) {
+        return res.status(500).json({ error: 'Server is not configured' })
+      }
+      console.error('[cos-sign] batch sign error:', err)
+      return res.status(500).json({ error: 'Failed to sign URLs' })
     }
 
     res.setHeader('Cache-Control', 'private, max-age=1800')

@@ -7,7 +7,7 @@ import { Avatar } from './Avatar'
 import { PhotoLightbox } from './PhotoLightbox'
 import { SignedImage } from './SignedImage'
 import { uploadCheckinPhoto } from '../lib/cosUpload'
-import { updateCheckinPhoto, deleteCheckinPhoto } from '../lib/queries'
+import { addCheckin, updateCheckinPhoto, deleteCheckinPhoto } from '../lib/queries'
 import { useQueryClient } from '@tanstack/react-query'
 
 interface RelicModalProps {
@@ -85,12 +85,11 @@ export function RelicModal({ relic, onClose }: RelicModalProps) {
       // Use relic_ prefix for relic photos to distinguish from heritage
       const url = await uploadCheckinPhoto(file, `relic_${relic.id}`, currentUser, setUploadProgress)
 
-      // If not checked in yet, do a checkin first
       if (!checkinSet.has(`${currentUser}:${relic.id}`)) {
-        toggleCheckin({ userId: currentUser, relicId: relic.id, checked: false })
+        await addCheckin(currentUser, relic.id, url)
+      } else {
+        await updateCheckinPhoto(currentUser, relic.id, url)
       }
-
-      await updateCheckinPhoto(currentUser, relic.id, url)
       queryClient.invalidateQueries({ queryKey: CHECKINS_KEY })
     } catch (err) {
       console.error('Upload failed:', err)

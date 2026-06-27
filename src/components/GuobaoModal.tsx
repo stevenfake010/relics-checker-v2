@@ -6,7 +6,7 @@ import { Avatar } from './Avatar'
 import { PhotoLightbox } from './PhotoLightbox'
 import { SignedImage } from './SignedImage'
 import { uploadCheckinPhoto } from '../lib/cosUpload'
-import { updateGuobaoCheckinPhoto, deleteGuobaoCheckinPhoto } from '../lib/guobaoQueries'
+import { addGuobaoCheckin, updateGuobaoCheckinPhoto, deleteGuobaoCheckinPhoto } from '../lib/guobaoQueries'
 import { useQueryClient } from '@tanstack/react-query'
 
 interface GuobaoModalProps {
@@ -81,9 +81,10 @@ export function GuobaoModal({ site, onClose }: GuobaoModalProps) {
     try {
       const url = await uploadCheckinPhoto(file, `guobao_${site.id}`, currentUser, setUploadProgress)
       if (!checkinSet.has(`${currentUser}:${site.id}`)) {
-        toggleCheckin({ userId: currentUser, siteId: site.id, checked: false })
+        await addGuobaoCheckin(currentUser, site.id, url)
+      } else {
+        await updateGuobaoCheckinPhoto(currentUser, site.id, url)
       }
-      await updateGuobaoCheckinPhoto(currentUser, site.id, url)
       queryClient.invalidateQueries({ queryKey: GUOBAO_CHECKINS_KEY })
     } catch (err) {
       console.error('Upload failed:', err)
@@ -131,7 +132,7 @@ export function GuobaoModal({ site, onClose }: GuobaoModalProps) {
           </button>
 
           <div className="mb-1 text-xs" style={{ color: 'var(--color-mist)' }}>
-            编号 {site.id}　·　第{site.batch === 1 ? '一' : '二'}批
+            编号 {site.id} · 第{site.batch === 1 ? '一' : '二'}批
           </div>
 
           <h2
