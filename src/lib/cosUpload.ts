@@ -25,6 +25,7 @@ const cos = new COS({
 
 const BUCKET = 'heritage-1420709282'
 const REGION = 'ap-shanghai'
+const COS_ORIGIN = `https://${BUCKET}.cos.${REGION}.myqcloud.com/`
 
 function generateKey(siteId: string, userId: string, file: File): string {
   const rawExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
@@ -66,17 +67,24 @@ export async function uploadCheckinPhoto(
 }
 
 export async function deleteCheckinPhotoObject(url: string): Promise<void> {
-  const authToken = getAuthToken()
-  if (!authToken) throw new Error('Not authenticated')
+  const key = extractUploadedPhotoKey(url)
+  if (!key) throw new Error('Invalid photo URL')
 
-  const resp = await fetch('/api/cos-delete', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${authToken}`,
-    },
-    body: JSON.stringify({ url }),
+  return new Promise((resolve, reject) => {
+    cos.deleteObject({ Bucket: BUCKET, Region: REGION, Key: key }, (err) => {
+      if (!err || err.statusCode === 404 || err.code === 'NoSuchKey') {
+        resolve()
+      } else {
+        reject(err)
+      }
+    })
   })
+}
 
-  if (!resp.ok) throw new Error(`Delete object failed: ${resp.status}`)
+function extractUploadedPhotoKey(url: string): string | null {
+  if (url.startsWith(COS_ORIGIN)) {
+    return decodeURIComponent(url.slice(COS_ORIGIN.length).split('?')[0])
+  }
+  if (url.startsWith('checkin/')) return url
+  return null
 }

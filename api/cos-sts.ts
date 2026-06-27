@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       version: '2.0',
       statement: [
         {
-          action: ['name/cos:PutObject', 'name/cos:PostObject'],
+          action: ['name/cos:PutObject', 'name/cos:PostObject', 'name/cos:DeleteObject'],
           effect: 'allow',
           resource: [
             `qcs::cos:${config.region}:uid/${appId}:${config.bucket}/${allowPrefix}`,
