@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import STS from 'qcloud-cos-sts'
-import { applyCors } from '../server/cors'
-import { getBearerUser, getRequiredEnv, ServerConfigError } from '../server/auth'
+import { applyCors } from '../server/cors.ts'
+import { getBearerUser, getRequiredEnv, ServerConfigError } from '../server/auth.ts'
 
 const config = {
   bucket: process.env.COS_BUCKET || 'heritage-1420709282',

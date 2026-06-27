@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { getRequiredEnv } from './auth'
+import { getRequiredEnv } from './auth.ts'
 
 export function createSupabaseAdmin() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
@@ -14,4 +14,3 @@ export function createSupabaseAdmin() {
     },
   })
 }
-

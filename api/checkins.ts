@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { applyCors } from '../server/cors'
-import { getBearerUser, ServerConfigError, type UserId } from '../server/auth'
-import { createSupabaseAdmin } from '../server/supabaseAdmin'
-import { getCheckinTable, normalizeItemId } from '../server/checkinTables'
+import { applyCors } from '../server/cors.ts'
+import { getBearerUser, ServerConfigError, type UserId } from '../server/auth.ts'
+import { createSupabaseAdmin } from '../server/supabaseAdmin.ts'
+import { getCheckinTable, normalizeItemId } from '../server/checkinTables.ts'
 
 const COS_BUCKET = process.env.COS_BUCKET || 'heritage-1420709282'
 const COS_REGION = process.env.COS_REGION || 'ap-shanghai'

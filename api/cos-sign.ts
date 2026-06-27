@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import crypto from 'crypto'
-import { applyCors } from '../server/cors'
-import { getBearerUser, getRequiredEnv, ServerConfigError } from '../server/auth'
+import { applyCors } from '../server/cors.ts'
+import { getBearerUser, getRequiredEnv, ServerConfigError } from '../server/auth.ts'
 
 const BUCKET = process.env.COS_BUCKET || 'heritage-1420709282'
 const REGION = process.env.COS_REGION || 'ap-shanghai'

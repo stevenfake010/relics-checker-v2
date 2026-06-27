@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { applyCors } from '../server/cors'
-import { generateToken, getRequiredEnv, isUserId, ServerConfigError } from '../server/auth'
+import { applyCors } from '../server/cors.ts'
+import { generateToken, getRequiredEnv, isUserId, ServerConfigError } from '../server/auth.ts'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res, 'POST', 'Content-Type')) return
