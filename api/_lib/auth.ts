@@ -70,4 +70,3 @@ export function getBearerUser(req: VercelRequest): { userId: UserId } | null {
   const token = Array.isArray(authHeader) ? authHeader[0] : authHeader
   return verifyToken(token.replace(/^Bearer\s+/i, ''))
 }
-

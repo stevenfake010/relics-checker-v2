@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { applyCors } from '../server/cors.ts'
-import { getBearerUser, ServerConfigError, type UserId } from '../server/auth.ts'
-import { createSupabaseAdmin } from '../server/supabaseAdmin.ts'
-import { getCheckinTable, normalizeItemId } from '../server/checkinTables.ts'
+import { applyCors } from './_lib/cors.js'
+import { getBearerUser, type UserId } from './_lib/auth.js'
+import { createSupabaseAdmin } from './_lib/supabaseAdmin.js'
+import { getCheckinTable, normalizeItemId } from './_lib/checkinTables.js'
 
 const COS_BUCKET = process.env.COS_BUCKET || 'heritage-1420709282'
 const COS_REGION = process.env.COS_REGION || 'ap-shanghai'
@@ -38,7 +38,7 @@ function isAllowedPhotoUrl(value: unknown, userId: UserId): value is string | nu
 }
 
 function handleError(err: unknown, res: VercelResponse) {
-  if (err instanceof ServerConfigError || err instanceof Error) {
+  if (err instanceof Error) {
     if (err.message.startsWith('Missing required environment variable')) {
       return res.status(500).json({ error: 'Server is not configured' })
     }
