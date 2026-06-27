@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { CHECKINS_KEY } from './useCheckins'
 import { HERITAGE_CHECKINS_KEY } from './useHeritageCheckins'
+import { WORLD_CHECKINS_KEY } from './useWorldCheckins'
 
 export function useRealtime() {
   const queryClient = useQueryClient()
@@ -32,9 +33,21 @@ export function useRealtime() {
       )
       .subscribe()
 
+    const worldChannel = supabase
+      .channel('world-checkins-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'world_checkins' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: WORLD_CHECKINS_KEY })
+        }
+      )
+      .subscribe()
+
     return () => {
       supabase?.removeChannel(relicChannel)
       supabase?.removeChannel(heritageChannel)
+      supabase?.removeChannel(worldChannel)
     }
   }, [queryClient])
 }

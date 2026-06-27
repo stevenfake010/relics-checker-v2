@@ -152,7 +152,7 @@ function HeritageStats({ checkinSet }: { checkinSet: Set<string> }) {
           className="text-lg font-medium mb-4"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-ink)' }}
         >
-          世界遗产打卡总览（共 {TOTAL} 处）
+          中国世遗打卡总览（共 {TOTAL} 处）
         </h2>
         <div className="grid grid-cols-3 gap-4">
           {(['zuo', 'huang'] as const).map((uid) => {

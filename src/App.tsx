@@ -6,6 +6,7 @@ import { ToastProvider } from './components/Toast'
 import { Onboarding } from './pages/Onboarding'
 import { Home } from './pages/Home'
 import { Heritage } from './pages/Heritage'
+import { World } from './pages/World'
 import { Stats } from './pages/Stats'
 import { Guobao } from './pages/Guobao'
 import { useRealtime } from './hooks/useRealtime'
@@ -60,6 +61,14 @@ function AppRoutes() {
           element={
             <AuthGuard>
               <Heritage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/world"
+          element={
+            <AuthGuard>
+              <World />
             </AuthGuard>
           }
         />

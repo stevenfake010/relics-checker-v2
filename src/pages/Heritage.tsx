@@ -128,7 +128,7 @@ export function Heritage() {
                 className="text-sm font-medium mb-3"
                 style={{ color: 'var(--color-mist)', fontFamily: 'var(--font-serif)' }}
               >
-                世界遗产打卡
+                中国世遗打卡
               </h3>
               {(['zuo', 'huang'] as const).map((uid) => {
                 const cfg = USER_CONFIGS[uid]
