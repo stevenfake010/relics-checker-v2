@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { type UserId, USER_CONFIGS, useIdentity } from '../contexts/IdentityContext'
+import { setAuthToken } from '../lib/auth'
 import { Avatar } from '../components/Avatar'
 
 export function Onboarding() {
@@ -40,7 +41,7 @@ export function Onboarding() {
       if (resp.ok) {
         const data = await resp.json()
         // Store token for future use
-        localStorage.setItem('auth_token', data.token)
+        setAuthToken(data.token)
         setCurrentUser(selectedUser)
       } else {
         setError(true)

@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
+import { getAuthToken } from '../lib/auth'
 
 const signedUrlCache = new Map<string, { url: string; expiresAt: number }>()
-
-function getAuthToken(): string | null {
-  return localStorage.getItem('auth_token')
-}
 
 export async function fetchSignedUrl(key: string): Promise<string> {
   const cached = signedUrlCache.get(key)

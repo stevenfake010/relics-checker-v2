@@ -3,10 +3,11 @@
  * Uses cos-js-sdk-v5 for reliable browser uploads.
  */
 import COS from 'cos-js-sdk-v5'
+import { getAuthToken } from './auth'
 
 const cos = new COS({
   getAuthorization: async (_options, callback) => {
-    const authToken = localStorage.getItem('auth_token') ?? ''
+    const authToken = getAuthToken() ?? ''
     const resp = await fetch('/api/cos-sts', {
       headers: { Authorization: `Bearer ${authToken}` },
     })
