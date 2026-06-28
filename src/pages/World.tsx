@@ -76,13 +76,13 @@ export function World() {
     return { zuoCount, huangCount, bothCount }
   }, [checkinSet])
 
-  const regionProgress = useMemo(() => {
+  const countryProgress = useMemo(() => {
     const map = new Map<string, { total: number; visited: number }>()
     for (const s of WORLD_SITES) {
-      const cur = map.get(s.region) ?? { total: 0, visited: 0 }
+      const cur = map.get(s.country) ?? { total: 0, visited: 0 }
       cur.total++
       if (checkinSet.has(`zuo:${s.id}`) || checkinSet.has(`huang:${s.id}`)) cur.visited++
-      map.set(s.region, cur)
+      map.set(s.country, cur)
     }
     return Array.from(map.entries())
       .map(([name, d]) => ({ name, ...d, pending: d.total - d.visited }))
@@ -142,17 +142,17 @@ export function World() {
 
             <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--color-surface)', boxShadow: 'var(--shadow-card)' }}>
               <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--color-mist)', fontFamily: 'var(--font-serif)' }}>
-                大区待打卡
+                国家待打卡
               </h3>
               <div className="space-y-1.5">
-                {regionProgress.map((p) => (
+                {countryProgress.map((p) => (
                   <button
                     key={p.name}
-                    onClick={() => setRegion(region === p.name ? '' : p.name)}
+                    onClick={() => setCountry(country === p.name ? '' : p.name)}
                     className="w-full flex items-center justify-between text-left text-xs px-2 py-1.5 rounded transition-all"
                     style={{
-                      backgroundColor: region === p.name ? 'var(--color-vermilion-light)' : 'transparent',
-                      color: region === p.name ? 'var(--color-vermilion)' : 'var(--color-ink)',
+                      backgroundColor: country === p.name ? 'var(--color-vermilion-light)' : 'transparent',
+                      color: country === p.name ? 'var(--color-vermilion)' : 'var(--color-ink)',
                     }}
                   >
                     <span>{p.name}</span>
